@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 84% 5%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 84% 5%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 84% 5%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 84% 5%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 84% 5%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 207 90% 54%;
+  --radius: 0.5rem;
+  
+  /* Viking/Norse theme colors */
+  --viking-brown: 18 50% 27%;
+  --viking-copper: 25 73% 47%;
+  --gold: 45 93% 47%;
+  --battle-red: 9 89% 50%;
+  --royal-blue: 220 90% 56%;
+  --forest-green: 142 76% 36%;
+  --dark-wood: 30 25% 13%;
+  --light-parchment: 45 56% 81%;
+  --ios-dark: 240 6% 10%;
+  --ios-light: 240 5% 96%;
+}
+
+.dark {
+  --background: 240 6% 10%;
+  --foreground: 210 40% 98%;
+  --muted: 240 4% 16%;
+  --muted-foreground: 215 14% 65%;
+  --popover: 240 6% 10%;
+  --popover-foreground: 210 40% 98%;
+  --card: 240 6% 10%;
+  --card-foreground: 210 40% 98%;
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 240 4% 16%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 207 90% 54%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(var(--ios-dark)), hsl(var(--dark-wood)));
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .piece-king {
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-600;
+    @apply border-2 border-yellow-300 shadow-lg;
+    @apply relative;
+  }
+  
+  .piece-defender {
+    @apply bg-gradient-to-br from-blue-500 to-blue-700;
+    @apply border-2 border-blue-300 shadow-lg;
+    @apply relative;
+  }
+  
+  .piece-attacker {
+    @apply bg-gradient-to-br from-red-500 to-red-700;
+    @apply border-2 border-red-300 shadow-lg;
+    @apply relative;
+  }
+  
+  .board-cell {
+    @apply aspect-square transition-all duration-200;
+    @apply hover:scale-105 cursor-pointer;
+  }
+  
+  .board-cell.selected {
+    @apply ring-4 ring-yellow-400 ring-opacity-60;
+    @apply bg-yellow-200;
+  }
+  
+  .board-cell.valid-move {
+    @apply bg-green-200 ring-2 ring-green-400;
+    animation: pulse 1.5s infinite;
+  }
+  
+  .board-cell.throne {
+    @apply bg-gradient-to-br from-yellow-200 to-yellow-300;
+    @apply border-2 border-yellow-500;
+  }
+  
+  .board-cell.corner {
+    @apply bg-gradient-to-br from-red-200 to-red-300;
+    @apply border-2 border-red-500;
+  }
+  
+  .game-card {
+    @apply backdrop-blur-lg;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .viking-gradient {
+    background: linear-gradient(135deg, hsl(var(--viking-brown)), hsl(var(--viking-copper)));
+  }
+  
+  .ios-shadow {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@layer utilities {
+  .animate-piece-move {
+    animation: piece-move 0.3s ease-in-out;
+  }
+  
+  .animate-piece-capture {
+    animation: piece-capture 0.5s ease-in-out;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes piece-move {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes piece-capture {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 0.5; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px rgba(230, 126, 34, 0.5); }
+  to { box-shadow: 0 0 20px rgba(230, 126, 34, 0.8); }
+}

@@ -40,6 +40,7 @@ export default function Lobby() {
     mutationFn: async (gameData: any) => {
       const response = await apiRequest('POST', '/api/games/create', {
         hostId: 1, // Mock user ID
+        boardState: [], // Will be populated by server
         ...gameData,
       });
       return response.json();

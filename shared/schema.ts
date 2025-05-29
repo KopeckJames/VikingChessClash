@@ -46,6 +46,11 @@ export const insertGameSchema = createInsertSchema(games).omit({
   id: true,
   createdAt: true,
   completedAt: true,
+}).partial({
+  guestId: true,
+  winnerId: true,
+  winCondition: true,
+  moveHistory: true,
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({

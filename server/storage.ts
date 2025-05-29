@@ -1,4 +1,6 @@
 import { users, games, chatMessages, type User, type InsertUser, type Game, type InsertGame, type ChatMessage, type InsertChatMessage, type BoardState, type PieceType } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -21,138 +23,101 @@ export interface IStorage {
   getGameChatMessages(gameId: number): Promise<(ChatMessage & { senderName: string })[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private games: Map<number, Game>;
-  private chatMessages: Map<number, ChatMessage>;
-  private currentUserId: number;
-  private currentGameId: number;
-  private currentChatId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.games = new Map();
-    this.chatMessages = new Map();
-    this.currentUserId = 1;
-    this.currentGameId = 1;
-    this.currentChatId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { 
-      ...insertUser,
-      id,
-      rating: insertUser.rating ?? 1200,
-      wins: insertUser.wins ?? 0,
-      losses: insertUser.losses ?? 0,
-      createdAt: new Date() 
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async updateUserStats(id: number, wins: number, losses: number, rating: number): Promise<void> {
-    const user = this.users.get(id);
-    if (user) {
-      user.wins = wins;
-      user.losses = losses;
-      user.rating = rating;
-    }
+    await db
+      .update(users)
+      .set({ wins, losses, rating })
+      .where(eq(users.id, id));
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {
-    const id = this.currentGameId++;
-    const game: Game = {
-      ...insertGame,
-      id,
-      guestId: insertGame.guestId ?? null,
-      status: insertGame.status ?? "waiting",
-      currentPlayer: insertGame.currentPlayer ?? "attacker",
-      hostRole: insertGame.hostRole ?? "defender",
-      timeControl: insertGame.timeControl ?? "15+10",
-      winnerId: insertGame.winnerId ?? null,
-      winCondition: insertGame.winCondition ?? null,
-      moveHistory: insertGame.moveHistory ?? [],
-      createdAt: new Date(),
-      completedAt: null,
-    };
-    this.games.set(id, game);
+    const [game] = await db
+      .insert(games)
+      .values(insertGame)
+      .returning();
     return game;
   }
 
   async getGame(id: number): Promise<Game | undefined> {
-    return this.games.get(id);
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game || undefined;
   }
 
   async getActiveGames(): Promise<Game[]> {
-    return Array.from(this.games.values()).filter(game => game.status === "active");
+    return await db.select().from(games).where(eq(games.status, "active"));
   }
 
   async getWaitingGames(): Promise<Game[]> {
-    return Array.from(this.games.values()).filter(game => game.status === "waiting");
+    return await db.select().from(games).where(eq(games.status, "waiting"));
   }
 
   async getUserGames(userId: number): Promise<Game[]> {
-    return Array.from(this.games.values()).filter(
-      game => game.hostId === userId || game.guestId === userId
+    return await db.select().from(games).where(
+      eq(games.hostId, userId)
     );
   }
 
   async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
-    const game = this.games.get(id);
-    if (game) {
-      Object.assign(game, updates);
-      return game;
-    }
-    return undefined;
+    const [game] = await db
+      .update(games)
+      .set(updates)
+      .where(eq(games.id, id))
+      .returning();
+    return game || undefined;
   }
 
   async joinGame(gameId: number, guestId: number): Promise<Game | undefined> {
-    const game = this.games.get(gameId);
-    if (game && game.status === "waiting" && !game.guestId) {
-      game.guestId = guestId;
-      game.status = "active";
-      return game;
-    }
-    return undefined;
+    const [game] = await db
+      .update(games)
+      .set({ guestId, status: "active" })
+      .where(eq(games.id, gameId))
+      .returning();
+    return game || undefined;
   }
 
   async addChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
-    const id = this.currentChatId++;
-    const message: ChatMessage = {
-      ...insertMessage,
-      id,
-      createdAt: new Date(),
-    };
-    this.chatMessages.set(id, message);
+    const [message] = await db
+      .insert(chatMessages)
+      .values(insertMessage)
+      .returning();
     return message;
   }
 
   async getGameChatMessages(gameId: number): Promise<(ChatMessage & { senderName: string })[]> {
-    const messages = Array.from(this.chatMessages.values())
-      .filter(msg => msg.gameId === gameId)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const messages = await db
+      .select({
+        id: chatMessages.id,
+        gameId: chatMessages.gameId,
+        senderId: chatMessages.senderId,
+        message: chatMessages.message,
+        createdAt: chatMessages.createdAt,
+        senderName: users.displayName,
+      })
+      .from(chatMessages)
+      .innerJoin(users, eq(chatMessages.senderId, users.id))
+      .where(eq(chatMessages.gameId, gameId))
+      .orderBy(chatMessages.createdAt);
 
-    const result = [];
-    for (const message of messages) {
-      const sender = this.users.get(message.senderId);
-      if (sender) {
-        result.push({
-          ...message,
-          senderName: sender.displayName,
-        });
-      }
-    }
-    return result;
+    return messages;
   }
 }
 
@@ -194,44 +159,46 @@ function createInitialBoard(): BoardState {
   return board;
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
 
-// Create some default users for testing
-const defaultUsers = [
-  { username: "erik_bold", password: "password", displayName: "Erik the Bold", rating: 1420, wins: 15, losses: 8 },
-  { username: "ragnar_iron", password: "password", displayName: "Ragnar Iron", rating: 1650, wins: 23, losses: 12 },
-  { username: "freya_shield", password: "password", displayName: "Freya Shield", rating: 1580, wins: 19, losses: 11 },
-];
+// Initialize database with default data
+async function initializeDatabase() {
+  try {
+    // Create default users for testing
+    const defaultUsers = [
+      { username: "erik_bold", password: "password", displayName: "Erik the Bold", rating: 1420, wins: 15, losses: 8 },
+      { username: "ragnar_iron", password: "password", displayName: "Ragnar Iron", rating: 1650, wins: 23, losses: 12 },
+      { username: "freya_shield", password: "password", displayName: "Freya Shield", rating: 1580, wins: 19, losses: 11 },
+    ];
 
-defaultUsers.forEach(async (userData) => {
-  await storage.createUser(userData);
-});
+    for (const userData of defaultUsers) {
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (!existingUser) {
+        await storage.createUser(userData);
+      }
+    }
 
-// Create some waiting games
-setTimeout(async () => {
-  await storage.createGame({
-    hostId: 1,
-    guestId: null,
-    status: "waiting",
-    currentPlayer: "attacker",
-    boardState: createInitialBoard(),
-    hostRole: "defender",
-    timeControl: "10+5",
-    winnerId: null,
-    winCondition: null,
-    moveHistory: [],
-  });
+    // Create some waiting games
+    const waitingGames = await storage.getWaitingGames();
+    if (waitingGames.length === 0) {
+      await storage.createGame({
+        hostId: 1,
+        boardState: createInitialBoard(),
+        hostRole: "defender",
+        timeControl: "10+5",
+      });
 
-  await storage.createGame({
-    hostId: 2,
-    guestId: null,
-    status: "waiting",
-    currentPlayer: "attacker",
-    boardState: createInitialBoard(),
-    hostRole: "attacker",
-    timeControl: "15+10",
-    winnerId: null,
-    winCondition: null,
-    moveHistory: [],
-  });
-}, 100);
+      await storage.createGame({
+        hostId: 2,
+        boardState: createInitialBoard(),
+        hostRole: "attacker",
+        timeControl: "15+10",
+      });
+    }
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+  }
+}
+
+// Initialize when module loads
+initializeDatabase();

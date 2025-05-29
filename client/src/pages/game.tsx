@@ -16,7 +16,7 @@ export default function Game() {
   const gameId = parseInt(id || "0");
   
   const { data: game, isLoading } = useQuery<Game>({
-    queryKey: ['/api/games', gameId],
+    queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
   });
 

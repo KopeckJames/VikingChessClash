@@ -75,21 +75,105 @@ function isCornerSquare(row: number, col: number): boolean {
 }
 
 function checkWinCondition(board: BoardState): { winner: "attacker" | "defender" | null; condition: string | null } {
-  // Check if king escaped (reached corner)
+  // Find the king
+  let kingPosition: { row: number; col: number } | null = null;
+  
   for (let row = 0; row < 11; row++) {
     for (let col = 0; col < 11; col++) {
       if (board[row][col] === "king") {
-        if (isCornerSquare(row, col)) {
-          return { winner: "defender", condition: "king_escape" };
-        }
-        // King is still on board, check if captured
-        return { winner: null, condition: null };
+        kingPosition = { row, col };
+        break;
       }
+    }
+    if (kingPosition) break;
+  }
+  
+  // King captured (not found on board)
+  if (!kingPosition) {
+    return { winner: "attacker", condition: "king_captured" };
+  }
+  
+  // King escaped (reached corner)
+  if (isCornerSquare(kingPosition.row, kingPosition.col)) {
+    return { winner: "defender", condition: "king_escape" };
+  }
+  
+  // Check if king is surrounded by attackers (captured but still on board)
+  if (isKingSurrounded(board, kingPosition)) {
+    return { winner: "attacker", condition: "king_captured" };
+  }
+  
+  // Game continues
+  return { winner: null, condition: null };
+}
+
+function isKingSurrounded(board: BoardState, kingPos: { row: number; col: number }): boolean {
+  const { row, col } = kingPos;
+  const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+  
+  // Special case: King on throne (center)
+  if (row === 5 && col === 5) {
+    // King must be surrounded on all 4 sides
+    for (const [dr, dc] of directions) {
+      const newRow = row + dr;
+      const newCol = col + dc;
+      if (newRow >= 0 && newRow < 11 && newCol >= 0 && newCol < 11) {
+        if (board[newRow][newCol] !== "attacker") {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  
+  // Special case: King adjacent to throne
+  const isAdjacentToThrone = Math.abs(row - 5) + Math.abs(col - 5) === 1;
+  if (isAdjacentToThrone) {
+    // King must be surrounded on all accessible sides
+    let surroundedSides = 0;
+    let totalSides = 0;
+    
+    for (const [dr, dc] of directions) {
+      const newRow = row + dr;
+      const newCol = col + dc;
+      
+      if (newRow >= 0 && newRow < 11 && newCol >= 0 && newCol < 11) {
+        totalSides++;
+        if (board[newRow][newCol] === "attacker" || 
+            (newRow === 5 && newCol === 5)) { // Throne counts as attacker for capture
+          surroundedSides++;
+        }
+      } else {
+        // Board edge counts as surrounded
+        totalSides++;
+        surroundedSides++;
+      }
+    }
+    
+    return surroundedSides === totalSides;
+  }
+  
+  // Regular case: King anywhere else
+  let surroundedSides = 0;
+  let totalSides = 0;
+  
+  for (const [dr, dc] of directions) {
+    const newRow = row + dr;
+    const newCol = col + dc;
+    
+    if (newRow >= 0 && newRow < 11 && newCol >= 0 && newCol < 11) {
+      totalSides++;
+      if (board[newRow][newCol] === "attacker") {
+        surroundedSides++;
+      }
+    } else {
+      // Board edge counts as surrounded
+      totalSides++;
+      surroundedSides++;
     }
   }
   
-  // King not found = captured
-  return { winner: "attacker", condition: "king_captured" };
+  return surroundedSides === totalSides;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

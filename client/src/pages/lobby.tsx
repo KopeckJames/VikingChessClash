@@ -15,6 +15,7 @@ import LobbyList from "@/components/lobby-list";
 import { updateSEO, seoPages } from "@/lib/seo";
 import { analytics } from "@/lib/analytics";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
+import LogoutButton from "@/components/logout-button";
 
 type WaitingGame = {
   id: number;
@@ -152,6 +153,11 @@ export default function Lobby() {
                 {currentUser.displayName.slice(0, 2).toUpperCase()}
               </span>
             </div>
+            <LogoutButton 
+              variant="outline" 
+              size="sm" 
+              className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+            />
           </div>
         </div>
       </header>

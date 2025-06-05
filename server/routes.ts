@@ -402,6 +402,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: null });
   });
 
+  app.post('/api/auth/logout', async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (userId) {
+        // Update user's last seen timestamp on logout
+        await storage.updateUserLastSeen(userId);
+      }
+      
+      res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ message: 'Logout failed' });
+    }
+  });
+
   // REST API routes
   app.get('/api/users/stats', async (req, res) => {
     try {

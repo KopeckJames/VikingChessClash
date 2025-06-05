@@ -12,6 +12,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import { updateSEO, seoPages } from "@/lib/seo";
 import { analytics } from "@/lib/analytics";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
+import LogoutButton from "@/components/logout-button";
 import type { Game } from "@shared/schema";
 
 export default function Game() {
@@ -129,6 +130,19 @@ export default function Game() {
               <div className="text-right">
                 <div className="text-lg font-bold text-yellow-400">12:34</div>
                 <div className="text-xs text-gray-400">Time left</div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold">
+                    {currentUser.displayName.slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <LogoutButton 
+                  variant="ghost" 
+                  size="sm" 
+                  showText={false}
+                  className="text-red-400 hover:bg-red-600 hover:text-white"
+                />
               </div>
             </div>
           </div>

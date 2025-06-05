@@ -46,7 +46,8 @@ export default function Lobby() {
 
   const { data: waitingGames = [], isLoading } = useQuery<WaitingGame[]>({
     queryKey: ['/api/games/waiting'],
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 2000, // Refresh every 2 seconds for better responsiveness
+    staleTime: 0, // Always consider data stale to ensure fresh updates
   });
 
   const createGameMutation = useMutation({
@@ -60,10 +61,10 @@ export default function Lobby() {
     },
     onSuccess: (game) => {
       queryClient.invalidateQueries({ queryKey: ['/api/games/waiting'] });
-      setLocation(`/game/${game.id}`);
+      setIsCreating(false);
       toast({
         title: "Game Created",
-        description: "Your game has been created successfully!",
+        description: "Your game is now waiting for an opponent to join!",
       });
     },
     onError: () => {

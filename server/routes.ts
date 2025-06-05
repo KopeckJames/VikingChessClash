@@ -75,11 +75,11 @@ function isCornerSquare(row: number, col: number): boolean {
 }
 
 function checkWinCondition(board: BoardState): { winner: "attacker" | "defender" | null; condition: string | null } {
-  // Check if king escaped (reached edge)
+  // Check if king escaped (reached corner)
   for (let row = 0; row < 11; row++) {
     for (let col = 0; col < 11; col++) {
       if (board[row][col] === "king") {
-        if (row === 0 || row === 10 || col === 0 || col === 10) {
+        if (isCornerSquare(row, col)) {
           return { winner: "defender", condition: "king_escape" };
         }
         // King is still on board, check if captured

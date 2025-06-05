@@ -115,9 +115,11 @@ export function checkWinCondition(board: BoardState): { winner: "attacker" | "de
     return { winner: "attacker", condition: "king_captured" };
   }
   
-  // King escaped (reached edge)
-  if (kingPosition.row === 0 || kingPosition.row === 10 || 
-      kingPosition.col === 0 || kingPosition.col === 10) {
+  // King escaped (reached corner)
+  if ((kingPosition.row === 0 && kingPosition.col === 0) ||
+      (kingPosition.row === 0 && kingPosition.col === 10) ||
+      (kingPosition.row === 10 && kingPosition.col === 0) ||
+      (kingPosition.row === 10 && kingPosition.col === 10)) {
     return { winner: "defender", condition: "king_escape" };
   }
   

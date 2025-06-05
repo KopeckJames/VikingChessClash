@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,13 @@ export default function Lobby() {
   // Check if user is authenticated
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
   
+  useEffect(() => {
+    if (!currentUser) {
+      setLocation("/auth");
+    }
+  }, [currentUser, setLocation]);
+
   if (!currentUser) {
-    setLocation("/auth");
     return null;
   }
 
@@ -126,10 +131,12 @@ export default function Lobby() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-300">{waitingGames.length + 247} online</span>
+              <span className="text-sm text-gray-300">Welcome, {currentUser.displayName}</span>
             </div>
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">JD</span>
+              <span className="text-white text-sm font-semibold">
+                {currentUser.displayName.slice(0, 2).toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
@@ -211,9 +218,12 @@ export default function Lobby() {
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-green-400 mb-2">Active Players</h3>
+                <h3 className="text-lg font-semibold text-green-400 mb-2">Your Stats</h3>
                 <p className="text-sm text-gray-400">
-                  <span className="text-2xl font-bold text-green-400">{waitingGames.length + 247}</span> players online
+                  Rating: <span className="text-xl font-bold text-green-400">{currentUser.rating}</span>
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {currentUser.wins}W - {currentUser.losses}L
                 </p>
               </CardContent>
             </Card>

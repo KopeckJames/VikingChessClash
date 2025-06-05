@@ -138,9 +138,11 @@ function isKingSurrounded(board: BoardState, kingPos: Position): boolean {
   const { row, col } = kingPos;
   const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
   
-  // Special case: King on throne (center)
+  // Check if king is on board edge (wall)
+  const isOnWall = row === 0 || row === 10 || col === 0 || col === 10;
+  
+  // Special case: King on throne (center) - needs all 4 sides
   if (row === 5 && col === 5) {
-    // King must be surrounded on all 4 sides
     for (const [dr, dc] of directions) {
       const newRow = row + dr;
       const newCol = col + dc;
@@ -153,10 +155,9 @@ function isKingSurrounded(board: BoardState, kingPos: Position): boolean {
     return true;
   }
   
-  // Special case: King adjacent to throne
+  // Special case: King adjacent to throne - needs all accessible sides
   const isAdjacentToThrone = Math.abs(row - 5) + Math.abs(col - 5) === 1;
   if (isAdjacentToThrone) {
-    // King must be surrounded on all accessible sides
     let surroundedSides = 0;
     let totalSides = 0;
     
@@ -180,27 +181,40 @@ function isKingSurrounded(board: BoardState, kingPos: Position): boolean {
     return surroundedSides === totalSides;
   }
   
-  // Regular case: King anywhere else
+  // King on wall: needs 3 attackers (wall acts as 4th side)
+  if (isOnWall) {
+    let attackerCount = 0;
+    let requiredAttackers = 3;
+    
+    for (const [dr, dc] of directions) {
+      const newRow = row + dr;
+      const newCol = col + dc;
+      
+      if (newRow >= 0 && newRow < 11 && newCol >= 0 && newCol < 11) {
+        if (board[newRow][newCol] === "attacker") {
+          attackerCount++;
+        }
+      }
+    }
+    
+    return attackerCount >= requiredAttackers;
+  }
+  
+  // King not on wall: needs all 4 sides surrounded
   let surroundedSides = 0;
-  let totalSides = 0;
   
   for (const [dr, dc] of directions) {
     const newRow = row + dr;
     const newCol = col + dc;
     
     if (newRow >= 0 && newRow < 11 && newCol >= 0 && newCol < 11) {
-      totalSides++;
       if (board[newRow][newCol] === "attacker") {
         surroundedSides++;
       }
-    } else {
-      // Board edge counts as surrounded
-      totalSides++;
-      surroundedSides++;
     }
   }
   
-  return surroundedSides === totalSides;
+  return surroundedSides === 4;
 }
 
 export function createInitialBoard(): BoardState {

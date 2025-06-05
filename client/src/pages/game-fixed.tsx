@@ -80,6 +80,7 @@ export default function Game() {
                        (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
   const isGameActive = currentGame?.status === "active";
   const isWaitingForOpponent = currentGame?.status === "waiting";
+  const isGameCompleted = currentGame?.status === "completed";
 
   return (
     <div className="min-h-screen">
@@ -155,6 +156,91 @@ export default function Game() {
                       <div className="bg-slate-800 p-3 rounded-lg border border-slate-600">
                         <div className="text-sm text-gray-300 mb-1">Game ID:</div>
                         <div className="text-lg font-mono text-yellow-400">#{currentGame.id}</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : isGameCompleted ? (
+                  <div className="flex items-center justify-center h-96 bg-slate-900/50 rounded-lg">
+                    <div className="text-center max-w-md">
+                      <div className="mb-6">
+                        {currentGame.winnerId === userId ? (
+                          <div className="text-6xl mb-4">👑</div>
+                        ) : (
+                          <div className="text-6xl mb-4">⚔️</div>
+                        )}
+                      </div>
+                      
+                      <h2 className="text-3xl font-bold mb-4">
+                        {currentGame.winnerId === userId ? (
+                          <span className="text-yellow-400">Victory!</span>
+                        ) : (
+                          <span className="text-red-400">Defeat</span>
+                        )}
+                      </h2>
+                      
+                      <div className="space-y-4 mb-6">
+                        <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
+                          <h3 className="text-lg font-semibold text-gray-200 mb-3">Game Results</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <div className="text-gray-400">Winner</div>
+                              <div className="text-yellow-400 font-medium">
+                                {currentGame.winnerId === currentGame.hostId ? 
+                                  `Host (${currentGame.hostRole})` : 
+                                  `Guest (${currentGame.hostRole === "defender" ? "attacker" : "defender"})`}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400">Win Condition</div>
+                              <div className="text-gray-200">
+                                {currentGame.winCondition === "king_escape" ? "King Escaped" :
+                                 currentGame.winCondition === "king_captured" ? "King Captured" :
+                                 currentGame.winCondition || "Game Completed"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
+                          <h3 className="text-lg font-semibold text-gray-200 mb-3">All Players</h3>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">Host ({currentGame.hostRole})</span>
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                currentGame.winnerId === currentGame.hostId ? 
+                                'bg-yellow-400 text-black' : 'bg-gray-600 text-gray-300'
+                              }`}>
+                                {currentGame.winnerId === currentGame.hostId ? 'Winner' : 'Player'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">
+                                Guest ({currentGame.hostRole === "defender" ? "attacker" : "defender"})
+                              </span>
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                currentGame.winnerId === currentGame.guestId ? 
+                                'bg-yellow-400 text-black' : 'bg-gray-600 text-gray-300'
+                              }`}>
+                                {currentGame.winnerId === currentGame.guestId ? 'Winner' : 'Player'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-3 justify-center">
+                        <Link href="/lobby">
+                          <Button className="bg-yellow-600 hover:bg-yellow-700 text-black">
+                            Return to Lobby
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          onClick={() => window.location.reload()}
+                        >
+                          View Final Board
+                        </Button>
                       </div>
                     </div>
                   </div>

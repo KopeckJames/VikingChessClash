@@ -12,6 +12,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Crown, Plus, Zap, Users, Clock, Star } from "lucide-react";
 import LobbyList from "@/components/lobby-list";
+import { updateSEO, seoPages } from "@/lib/seo";
 
 type WaitingGame = {
   id: number;

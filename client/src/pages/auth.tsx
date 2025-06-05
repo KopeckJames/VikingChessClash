@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sword, Shield, Crown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { updateSEO, seoPages } from "@/lib/seo";
 
 export default function Auth() {
+  useEffect(() => {
+    updateSEO(seoPages.auth);
+  }, []);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

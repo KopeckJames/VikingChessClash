@@ -2,8 +2,13 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Crown, Shield, Sword, Users, Zap } from "lucide-react";
+import { useEffect } from "react";
+import { updateSEO, seoPages } from "@/lib/seo";
 
 export default function Home() {
+  useEffect(() => {
+    updateSEO(seoPages.home);
+  }, []);
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}

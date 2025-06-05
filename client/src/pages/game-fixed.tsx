@@ -18,21 +18,22 @@ export default function Game() {
   const [showWinnerCard, setShowWinnerCard] = useState(false);
   const [countdown, setCountdown] = useState(5);
   
-  // Check if user is authenticated
+  // Check if user is authenticated - moved all hooks before conditional returns
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-  
-  if (!currentUser) {
-    navigate("/auth");
-    return null;
-  }
 
   const { data: game, isLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
-    enabled: !!gameId,
+    enabled: !!gameId && !!currentUser,
   });
 
   const { socket, isConnected } = useWebSocket();
   const { gameState, makeMove, sendChatMessage, latestChatMessage } = useGameState(gameId, socket);
+
+  // Move authentication check after all hooks
+  if (!currentUser) {
+    navigate("/auth");
+    return null;
+  }
 
   useEffect(() => {
     if (socket && gameId && isConnected) {

@@ -85,6 +85,7 @@ export type WSMessage =
   | { type: "join_game"; gameId: number; userId: number }
   | { type: "make_move"; gameId: number; move: Move }
   | { type: "send_chat"; gameId: number; message: string }
+  | { type: "resign_game"; gameId: number; userId: number }
   | { type: "game_update"; game: Game }
   | { type: "chat_message"; message: ChatMessage & { senderName: string } }
   | { type: "error"; message: string };

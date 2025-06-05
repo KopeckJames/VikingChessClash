@@ -42,6 +42,19 @@ export default function Game() {
   const { socket, isConnected } = useWebSocket();
   const { gameState, makeMove, sendChatMessage, latestChatMessage } = useGameState(gameId, socket);
 
+  const handleResign = () => {
+    if (!currentGame || !socket) return;
+    
+    const resignMessage = {
+      type: "resign_game" as const,
+      gameId: gameId,
+      userId: currentUser.id
+    };
+    
+    socket.send(resignMessage);
+    analytics.trackGameAction("resign", gameId);
+  };
+
   useEffect(() => {
     if (socket && gameId && isConnected) {
       // Join the game room
@@ -205,6 +218,7 @@ export default function Game() {
                 variant="destructive" 
                 className="flex-1"
                 disabled={!isGameActive}
+                onClick={handleResign}
               >
                 <Flag className="w-4 h-4 mr-2" />
                 Resign

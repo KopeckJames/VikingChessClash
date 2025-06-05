@@ -332,6 +332,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             break;
+
+          case 'resign_game':
+            const { gameId: resignGameId, userId: resignUserId } = message;
+            const resignGame = await storage.getGame(resignGameId);
+            
+            if (resignGame && resignGame.status === 'active') {
+              // Determine winner (the player who didn't resign)
+              const winner = resignGame.hostId === resignUserId ? 'guest' : 'host';
+              const winnerRole = resignGame.hostId === resignUserId ? 
+                (resignGame.hostRole === 'attacker' ? 'defender' : 'attacker') : 
+                resignGame.hostRole;
+              
+              // Update game status
+              const updatedGame = await storage.updateGame(resignGameId, {
+                status: 'completed',
+                winner: winnerRole,
+                winCondition: 'resignation'
+              });
+              
+              if (updatedGame) {
+                // Update player stats
+                const hostUser = await storage.getUser(resignGame.hostId);
+                const guestUser = resignGame.guestId ? await storage.getUser(resignGame.guestId) : null;
+                
+                if (hostUser && guestUser) {
+                  if (winner === 'host') {
+                    await storage.updateUserStats(hostUser.id, hostUser.wins + 1, hostUser.losses, Math.min(hostUser.rating + 25, 3000));
+                    await storage.updateUserStats(guestUser.id, guestUser.wins, guestUser.losses + 1, Math.max(guestUser.rating - 25, 500));
+                  } else {
+                    await storage.updateUserStats(hostUser.id, hostUser.wins, hostUser.losses + 1, Math.max(hostUser.rating - 25, 500));
+                    await storage.updateUserStats(guestUser.id, guestUser.wins + 1, guestUser.losses, Math.min(guestUser.rating + 25, 3000));
+                  }
+                }
+                
+                // Broadcast game update to all players in the room
+                const room = gameRooms.get(resignGameId);
+                if (room) {
+                  const updateMessage = JSON.stringify({ type: 'game_update', game: updatedGame });
+                  room.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                      client.send(updateMessage);
+                    }
+                  });
+                }
+              }
+            }
+            break;
         }
       } catch (error) {
         console.error('WebSocket message error:', error);

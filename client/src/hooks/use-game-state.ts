@@ -27,14 +27,21 @@ export function useGameState(gameId: number, socket: WebSocketManager | null) {
       }
     };
 
+    const handleLobbyUpdate = (message: any) => {
+      // This will be handled by the lobby component
+      console.log('Lobby update received');
+    };
+
     socket.on('game_update', handleGameUpdate);
     socket.on('chat_message', handleChatMessage);
     socket.on('error', handleError);
+    socket.on('lobby_update', handleLobbyUpdate);
 
     return () => {
       socket.off('game_update', handleGameUpdate);
       socket.off('chat_message', handleChatMessage);
       socket.off('error', handleError);
+      socket.off('lobby_update', handleLobbyUpdate);
     };
   }, [socket]);
 

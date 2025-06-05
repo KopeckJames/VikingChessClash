@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const game = await storage.joinGame(gameId, userId);
       if (game) {
-        // Notify all clients in the game room
+        // Notify all clients in the game room about the game update
         const room = gameRooms.get(gameId);
         if (room) {
           const updateMessage = JSON.stringify({ type: 'game_update', game });
@@ -376,6 +376,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
         }
+
+        // Also update the waiting games list for all lobby users
+        const allConnectedUsers = Array.from(userSockets.values());
+        const lobbyUpdateMessage = JSON.stringify({ type: 'lobby_update' });
+        allConnectedUsers.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(lobbyUpdateMessage);
+          }
+        });
         
         res.json(game);
       } else {

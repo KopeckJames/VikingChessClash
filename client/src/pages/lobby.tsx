@@ -61,10 +61,10 @@ export default function Lobby() {
     },
     onSuccess: (game) => {
       queryClient.invalidateQueries({ queryKey: ['/api/games/waiting'] });
-      setIsCreating(false);
+      setLocation(`/game/${game.id}`);
       toast({
         title: "Game Created",
-        description: "Your game is now waiting for an opponent to join!",
+        description: "Waiting for an opponent to join your battle!",
       });
     },
     onError: () => {

@@ -79,6 +79,7 @@ export default function Game() {
   const isPlayerTurn = (currentGame?.currentPlayer === "defender" && userRole === "defender") ||
                        (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
   const isGameActive = currentGame?.status === "active";
+  const isWaitingForOpponent = currentGame?.status === "waiting";
 
   return (
     <div className="min-h-screen">
@@ -145,12 +146,26 @@ export default function Game() {
                 </div>
               </CardHeader>
               <CardContent>
-                <GameBoard 
-                  game={currentGame} 
-                  onMove={makeMove}
-                  isPlayerTurn={isPlayerTurn}
-                  userRole={userRole as "attacker" | "defender"}
-                />
+                {isWaitingForOpponent ? (
+                  <div className="flex items-center justify-center h-96 bg-slate-900/50 rounded-lg">
+                    <div className="text-center">
+                      <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                      <h3 className="text-xl font-bold text-yellow-400 mb-2">Waiting for Opponent</h3>
+                      <p className="text-gray-400 mb-4">Share this game link or wait for someone to join from the lobby</p>
+                      <div className="bg-slate-800 p-3 rounded-lg border border-slate-600">
+                        <div className="text-sm text-gray-300 mb-1">Game ID:</div>
+                        <div className="text-lg font-mono text-yellow-400">#{currentGame.id}</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <GameBoard 
+                    game={currentGame} 
+                    onMove={makeMove}
+                    isPlayerTurn={isPlayerTurn}
+                    userRole={userRole as "attacker" | "defender"}
+                  />
+                )}
               </CardContent>
             </Card>
 

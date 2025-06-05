@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ export default function Game() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const gameId = parseInt(id || "0");
+  const [showWinnerCard, setShowWinnerCard] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   
   // Check if user is authenticated
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -82,8 +84,79 @@ export default function Game() {
   const isWaitingForOpponent = currentGame?.status === "waiting";
   const isGameCompleted = currentGame?.status === "completed";
 
+  // Handle game completion with winner card and timer
+  useEffect(() => {
+    if (isGameCompleted && !showWinnerCard) {
+      setShowWinnerCard(true);
+      setCountdown(5);
+      
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate("/lobby");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [isGameCompleted, showWinnerCard, navigate]);
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Winner Card Overlay */}
+      {showWinnerCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <Card className="w-96 bg-slate-900 border-2 border-yellow-400 shadow-2xl">
+            <CardContent className="p-8 text-center">
+              <div className="mb-6">
+                {currentGame?.winnerId === userId ? (
+                  <>
+                    <div className="text-8xl mb-4">👑</div>
+                    <h1 className="text-4xl font-bold text-yellow-400 mb-2">VICTORY!</h1>
+                    <p className="text-xl text-gray-300">You have won the battle!</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-8xl mb-4">⚔️</div>
+                    <h1 className="text-4xl font-bold text-red-400 mb-2">DEFEAT</h1>
+                    <p className="text-xl text-gray-300">Your opponent has triumphed</p>
+                  </>
+                )}
+              </div>
+              
+              <div className="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-600">
+                <div className="text-sm text-gray-400 mb-1">Game Result</div>
+                <div className="text-lg font-medium text-yellow-400">
+                  {currentGame?.winCondition === "king_escape" ? "King Escaped to Corner" :
+                   currentGame?.winCondition === "king_captured" ? "King Was Captured" :
+                   "Game Completed"}
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="text-2xl font-bold text-white mb-2">
+                  Returning to lobby in
+                </div>
+                <div className="text-6xl font-bold text-yellow-400">
+                  {countdown}
+                </div>
+              </div>
+              
+              <Button 
+                onClick={() => navigate("/lobby")}
+                className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold px-8"
+              >
+                Return Now
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-gray-800 bg-slate-900/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">

@@ -21,14 +21,6 @@ export default function GameBoard({ game, onMove, isPlayerTurn, userRole }: Game
     const clickedPiece = board[row][col];
     const clickedPosition = { row, col };
 
-    console.log('Square clicked:', { row, col, piece: clickedPiece });
-    console.log('Game state:', { 
-      status: game.status, 
-      isPlayerTurn, 
-      userRole, 
-      currentPlayer: game.currentPlayer 
-    });
-
     // If there's a selected piece and this is a valid move
     if (selectedSquare && validMoves.some(move => move.row === row && move.col === col)) {
       const piece = board[selectedSquare.row][selectedSquare.col];
@@ -39,7 +31,6 @@ export default function GameBoard({ game, onMove, isPlayerTurn, userRole }: Game
         timestamp: Date.now(),
       };
       
-      console.log('Making move:', move);
       onMove(move);
       setSelectedSquare(null);
       setValidMoves([]);
@@ -52,24 +43,16 @@ export default function GameBoard({ game, onMove, isPlayerTurn, userRole }: Game
         (userRole === "defender" && (clickedPiece === "king" || clickedPiece === "defender")) ||
         (userRole === "attacker" && clickedPiece === "attacker");
       
-      console.log('Can select piece:', canSelectPiece, { clickedPiece, userRole });
-      
       if (canSelectPiece) {
         setSelectedSquare(clickedPosition);
         // Calculate valid moves for this piece
         const moves = calculateValidMoves(board, clickedPosition, clickedPiece);
         setValidMoves(moves);
-        console.log('Selected piece, valid moves:', moves.length);
       } else {
         setSelectedSquare(null);
         setValidMoves([]);
       }
     } else {
-      console.log('Cannot select piece:', { 
-        hasPiece: !!clickedPiece, 
-        isPlayerTurn, 
-        gameStatus: game.status 
-      });
       setSelectedSquare(null);
       setValidMoves([]);
     }

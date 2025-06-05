@@ -64,10 +64,9 @@ export default function Game() {
 
   const currentGame = gameState || game;
   const userId = 1; // Mock user ID - in production this would come from auth
-  const userRole = currentGame?.hostId === userId ? currentGame?.hostRole : 
-                   (currentGame?.hostRole === "defender" ? "attacker" : "defender");
-  const isPlayerTurn = (currentGame?.currentPlayer === "defender" && userRole === "defender") ||
-                       (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
+  // For testing, let's make the user the attacker since attackers go first
+  const userRole = "attacker";
+  const isPlayerTurn = currentGame?.currentPlayer === userRole;
   const isGameActive = currentGame?.status === "active";
 
   return (

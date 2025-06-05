@@ -21,16 +21,16 @@ export default function Game() {
   });
 
   const { socket, isConnected } = useWebSocket();
-  const { gameState, makeMove, sendChatMessage } = useGameState(gameId, socket);
+  const { gameState, makeMove, sendChatMessage, latestChatMessage } = useGameState(gameId, socket);
 
   useEffect(() => {
     if (socket && gameId && isConnected) {
       // Join the game room
-      socket.send(JSON.stringify({
+      socket.send({
         type: 'join_game',
         gameId,
         userId: 1, // Mock user ID
-      }));
+      });
     }
   }, [socket, gameId, isConnected]);
 
@@ -63,8 +63,12 @@ export default function Game() {
   }
 
   const currentGame = gameState || game;
-  const isPlayerTurn = currentGame.currentPlayer === "defender"; // Mock: assume user is defender
-  const isGameActive = currentGame.status === "active";
+  const userId = 1; // Mock user ID - in production this would come from auth
+  const userRole = currentGame?.hostId === userId ? currentGame?.hostRole : 
+                   (currentGame?.hostRole === "defender" ? "attacker" : "defender");
+  const isPlayerTurn = (currentGame?.currentPlayer === "defender" && userRole === "defender") ||
+                       (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
+  const isGameActive = currentGame?.status === "active";
 
   return (
     <div className="min-h-screen">
@@ -155,7 +159,7 @@ export default function Game() {
                   game={currentGame} 
                   onMove={makeMove}
                   isPlayerTurn={isPlayerTurn}
-                  userRole="defender" // Mock: assume user is defender
+                  userRole={userRole as "attacker" | "defender"}
                 />
               </CardContent>
             </Card>
@@ -264,7 +268,7 @@ export default function Game() {
             </Card>
 
             {/* Chat */}
-            <Chat gameId={gameId} onSendMessage={sendChatMessage} />
+            <Chat gameId={gameId} onSendMessage={sendChatMessage} newMessage={latestChatMessage} />
           </div>
         </div>
       </main>

@@ -4,6 +4,7 @@ import type { Game, Move, WSMessage } from "@shared/schema";
 
 export function useGameState(gameId: number, socket: WebSocketManager | null) {
   const [gameState, setGameState] = useState<Game | null>(null);
+  const [latestChatMessage, setLatestChatMessage] = useState<any>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -16,10 +17,7 @@ export function useGameState(gameId: number, socket: WebSocketManager | null) {
 
     const handleChatMessage = (message: WSMessage) => {
       if (message.type === 'chat_message') {
-        // Add message to chat component
-        if ((window as any).addChatMessage) {
-          (window as any).addChatMessage(message.message);
-        }
+        setLatestChatMessage(message.message);
       }
     };
 
@@ -64,5 +62,6 @@ export function useGameState(gameId: number, socket: WebSocketManager | null) {
     gameState,
     makeMove,
     sendChatMessage,
+    latestChatMessage,
   };
 }

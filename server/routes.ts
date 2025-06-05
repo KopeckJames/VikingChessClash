@@ -185,8 +185,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
           case 'send_chat':
             const { gameId: chatGameId, message: chatText } = message;
-            // In a real app, we'd get userId from authentication
-            const senderId = 1; // Mock sender ID
+            // Get the user ID for the current WebSocket connection
+            let senderId = 1; // Default to user 1
+            for (const [userId, socket] of Array.from(userSockets.entries())) {
+              if (socket === ws) {
+                senderId = userId;
+                break;
+              }
+            }
             
             const chatMessage = await storage.addChatMessage({
               gameId: chatGameId,

@@ -16,13 +16,17 @@ interface ChatMessageWithSender extends ChatMessage {
   senderName: string;
 }
 
-export default function Chat({ gameId, onSendMessage }: ChatProps) {
+interface ChatComponentProps extends ChatProps {
+  newMessage?: ChatMessageWithSender | null;
+}
+
+export default function Chat({ gameId, onSendMessage, newMessage }: ChatComponentProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessageWithSender[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: initialMessages } = useQuery<ChatMessageWithSender[]>({
-    queryKey: ['/api/games', gameId, 'chat'],
+    queryKey: [`/api/games/${gameId}/chat`],
     enabled: !!gameId,
   });
 
@@ -31,6 +35,12 @@ export default function Chat({ gameId, onSendMessage }: ChatProps) {
       setMessages(initialMessages);
     }
   }, [initialMessages]);
+
+  useEffect(() => {
+    if (newMessage) {
+      setMessages(prev => [...prev, newMessage]);
+    }
+  }, [newMessage]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -52,18 +62,6 @@ export default function Chat({ gameId, onSendMessage }: ChatProps) {
       handleSendMessage();
     }
   };
-
-  const addMessage = (newMessage: ChatMessageWithSender) => {
-    setMessages(prev => [...prev, newMessage]);
-  };
-
-  // Expose addMessage function for parent to call when receiving WebSocket messages
-  useEffect(() => {
-    (window as any).addChatMessage = addMessage;
-    return () => {
-      delete (window as any).addChatMessage;
-    };
-  }, []);
 
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString('en-US', {

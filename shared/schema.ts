@@ -24,6 +24,7 @@ export const games = pgTable("games", {
   hostRole: text("host_role").notNull().default("defender"), // attacker, defender
   timeControl: text("time_control").notNull().default("15+10"),
   winnerId: integer("winner_id").references(() => users.id),
+  winner: text("winner").$type<"attacker" | "defender" | null>(),
   winCondition: text("win_condition"), // king_escape, king_captured, resignation, draw
   moveHistory: jsonb("move_history").notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),

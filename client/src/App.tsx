@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Lobby from "@/pages/lobby";
 import Game from "@/pages/game-simple";
+import Leaderboard from "@/pages/leaderboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
       <Route path="/lobby" component={Lobby} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/game/:id" component={Game} />
       <Route component={NotFound} />
     </Switch>

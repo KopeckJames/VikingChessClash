@@ -666,5 +666,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get leaderboard
+  app.get('/api/leaderboard', async (req, res) => {
+    try {
+      const period = req.query.period as 'all' | 'month' | 'week' || 'all';
+      const leaderboard = await storage.getLeaderboard(period);
+      res.json(leaderboard);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch leaderboard' });
+    }
+  });
+
   return httpServer;
 }

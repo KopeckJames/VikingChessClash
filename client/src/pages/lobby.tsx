@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Crown, Plus, Zap, Users, Clock, Star } from "lucide-react";
 import LobbyList from "@/components/lobby-list";
 import { updateSEO, seoPages } from "@/lib/seo";
+import { analytics } from "@/lib/analytics";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 
 type WaitingGame = {
@@ -44,6 +45,7 @@ export default function Lobby() {
 
   useEffect(() => {
     updateSEO(seoPages.lobby);
+    analytics.trackPageView("/lobby", "Game Lobby - Viking Chess Online");
   }, []);
 
   if (!currentUser) {

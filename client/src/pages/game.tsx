@@ -10,6 +10,7 @@ import Chat from "@/components/chat";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useGameState } from "@/hooks/use-game-state";
 import { updateSEO, seoPages } from "@/lib/seo";
+import { analytics } from "@/lib/analytics";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import type { Game } from "@shared/schema";
 
@@ -23,7 +24,9 @@ export default function Game() {
   
   useEffect(() => {
     updateSEO(seoPages.game);
-  }, []);
+    analytics.trackPageView(`/game/${gameId}`, "Viking Chess Game - Battle in Progress");
+    analytics.trackGameAction("game_view", gameId);
+  }, [gameId]);
 
   if (!currentUser) {
     navigate("/auth");

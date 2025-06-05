@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Crown, Shield, Sword, Users, Zap } from "lucide-react";
 import { useEffect } from "react";
 import { updateSEO, seoPages } from "@/lib/seo";
+import { analytics } from "@/lib/analytics";
 
 export default function Home() {
   useEffect(() => {
     updateSEO(seoPages.home);
+    analytics.initialize();
+    analytics.trackPageView("/", "Viking Chess Online - Home");
   }, []);
   return (
     <div className="min-h-screen flex flex-col">

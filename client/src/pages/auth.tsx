@@ -10,11 +10,13 @@ import { Sword, Shield, Crown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { updateSEO, seoPages } from "@/lib/seo";
+import { analytics } from "@/lib/analytics";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 
 export default function Auth() {
   useEffect(() => {
     updateSEO(seoPages.auth);
+    analytics.trackPageView("/auth", "Login & Register - Viking Chess Online");
   }, []);
   const [, navigate] = useLocation();
   const { toast } = useToast();

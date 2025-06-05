@@ -240,6 +240,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { username, password, displayName } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+
+      // Create new user
+      const user = await storage.createUser({
+        username,
+        password, // In production, hash the password
+        displayName,
+        rating: 1200,
+        wins: 0,
+        losses: 0
+      });
+
+      res.json({ id: user.id, username: user.username, displayName: user.displayName, rating: user.rating });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to create account' });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user || user.password !== password) { // In production, use proper password hashing
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      res.json({ id: user.id, username: user.username, displayName: user.displayName, rating: user.rating });
+    } catch (error) {
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
+
+  app.get('/api/auth/me', async (req, res) => {
+    // For now, return user data from client session
+    // In production, implement proper session management
+    res.json({ user: null });
+  });
+
   // REST API routes
   app.get('/api/games/waiting', async (req, res) => {
     try {

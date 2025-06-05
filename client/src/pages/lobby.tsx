@@ -41,6 +41,10 @@ export default function Lobby() {
     }
   }, [currentUser, setLocation]);
 
+  useEffect(() => {
+    updateSEO(seoPages.lobby);
+  }, []);
+
   if (!currentUser) {
     return null;
   }

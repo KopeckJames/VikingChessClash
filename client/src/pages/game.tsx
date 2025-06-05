@@ -9,6 +9,7 @@ import GameBoard from "@/components/game-board";
 import Chat from "@/components/chat";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useGameState } from "@/hooks/use-game-state";
+import { updateSEO, seoPages } from "@/lib/seo";
 import type { Game } from "@shared/schema";
 
 export default function Game() {
@@ -19,6 +20,10 @@ export default function Game() {
   // Check if user is authenticated
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
   
+  useEffect(() => {
+    updateSEO(seoPages.game);
+  }, []);
+
   if (!currentUser) {
     navigate("/auth");
     return null;

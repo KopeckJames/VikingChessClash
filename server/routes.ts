@@ -298,6 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...gameData,
         boardState: initialBoard,
         moveHistory: [],
+        status: "active", // Make games immediately active for testing
       });
       
       res.json(game);

@@ -50,6 +50,11 @@ export default function Lobby() {
     staleTime: 0, // Always consider data stale to ensure fresh updates
   });
 
+  const { data: userStats } = useQuery<{ totalUsers: number; onlineUsers: number; offlineUsers: number }>({
+    queryKey: ['/api/users/stats'],
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
   const createGameMutation = useMutation({
     mutationFn: async (gameData: any) => {
       const response = await apiRequest('POST', '/api/games/create', {
@@ -148,7 +153,7 @@ export default function Lobby() {
         <div className="max-w-6xl mx-auto">
           
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Dialog open={isCreating} onOpenChange={setIsCreating}>
               <DialogTrigger asChild>
                 <Card className="bg-white/5 backdrop-blur-lg border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
@@ -226,6 +231,40 @@ export default function Lobby() {
                 <p className="text-xs text-gray-500 mt-1">
                   {currentUser.wins}W - {currentUser.losses}L
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 backdrop-blur-lg border-white/10">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-blue-400 mb-2">Vikings Online</h3>
+                {userStats ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-center items-center space-x-4">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center space-x-1">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                          <span className="text-lg font-bold text-green-400">{userStats.onlineUsers}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">Online</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="text-lg font-bold text-gray-400">{userStats.offlineUsers}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">Offline</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total: {userStats.totalUsers} Vikings
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">Loading stats...</p>
+                )}
               </CardContent>
             </Card>
           </div>

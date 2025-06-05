@@ -216,6 +216,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const { gameId, userId } = message;
             userSockets.set(userId, ws);
             
+            // Update user's last seen timestamp
+            await storage.updateUserLastSeen(userId);
+            
             if (!gameRooms.has(gameId)) {
               gameRooms.set(gameId, new Set());
             }

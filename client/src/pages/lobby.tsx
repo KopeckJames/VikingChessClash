@@ -155,6 +155,12 @@ export default function Lobby() {
                 {currentUser.displayName.slice(0, 2).toUpperCase()}
               </span>
             </div>
+            <Link href="/leaderboard">
+              <Button variant="outline" size="sm" className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10">
+                <Crown className="w-4 h-4 mr-1" />
+                Leaderboard
+              </Button>
+            </Link>
             <LogoutButton 
               variant="outline" 
               size="sm" 

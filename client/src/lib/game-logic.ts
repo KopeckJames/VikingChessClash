@@ -76,7 +76,9 @@ export function calculateCaptures(board: BoardState, position: Position): Positi
         captures.push({ row: adjacentRow, col: adjacentCol });
       }
     } else if ((piece === "defender" || piece === "king") && adjacentPiece === "attacker") {
-      if (oppositePiece === piece || isSpecialSquare(oppositeRow, oppositeCol)) {
+      // Attackers can be captured by defenders/king on opposite side OR by any defender/king piece
+      if (oppositePiece === "defender" || oppositePiece === "king" || 
+          oppositePiece === piece || isSpecialSquare(oppositeRow, oppositeCol)) {
         captures.push({ row: adjacentRow, col: adjacentCol });
       }
     }

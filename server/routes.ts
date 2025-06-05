@@ -54,11 +54,17 @@ function checkCaptures(board: BoardState, position: Position): Position[] {
     const adjacentPiece = board[adjacentRow][adjacentCol];
     const oppositePiece = board[oppositeRow][oppositeCol];
     
-    // Regular capture rules (simplified)
+    // Regular capture rules
     if (adjacentPiece && adjacentPiece !== piece) {
-      if ((piece === "attacker" && (adjacentPiece === "defender" || adjacentPiece === "king")) ||
-          ((piece === "defender" || piece === "king") && adjacentPiece === "attacker")) {
+      if (piece === "attacker" && (adjacentPiece === "defender" || adjacentPiece === "king")) {
         if (oppositePiece === piece || (oppositeRow === 5 && oppositeCol === 5) || 
+            isCornerSquare(oppositeRow, oppositeCol)) {
+          captures.push({ row: adjacentRow, col: adjacentCol });
+        }
+      } else if ((piece === "defender" || piece === "king") && adjacentPiece === "attacker") {
+        // Attackers can be captured by defenders/king on opposite side OR by any defender/king piece
+        if (oppositePiece === "defender" || oppositePiece === "king" || 
+            oppositePiece === piece || (oppositeRow === 5 && oppositeCol === 5) || 
             isCornerSquare(oppositeRow, oppositeCol)) {
           captures.push({ row: adjacentRow, col: adjacentCol });
         }
@@ -269,6 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
           case 'send_chat':
             const { gameId: chatGameId, message: chatText } = message;
+            console.log('Received chat message:', { chatGameId, chatText });
+            
             // Get the user ID for the current WebSocket connection
             let senderId = 1; // Default to user 1
             for (const [userId, socket] of Array.from(userSockets.entries())) {
@@ -277,12 +285,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 break;
               }
             }
+            console.log('Chat sender ID:', senderId);
             
             const chatMessage = await storage.addChatMessage({
               gameId: chatGameId,
               senderId,
               message: chatText,
             });
+            console.log('Saved chat message:', chatMessage);
             
             const sender = await storage.getUser(senderId);
             if (sender) {
@@ -290,12 +300,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'chat_message',
                 message: { ...chatMessage, senderName: sender.displayName }
               };
+              console.log('Broadcasting chat update:', chatUpdate);
               
               const room = gameRooms.get(chatGameId);
+              console.log('Game room size:', room?.size || 0);
               if (room) {
                 const chatUpdateMessage = JSON.stringify(chatUpdate);
                 room.forEach(client => {
                   if (client.readyState === WebSocket.OPEN) {
+                    console.log('Sending chat message to client');
                     client.send(chatUpdateMessage);
                   }
                 });

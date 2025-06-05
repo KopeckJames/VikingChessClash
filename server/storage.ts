@@ -161,40 +161,10 @@ function createInitialBoard(): BoardState {
 
 export const storage = new DatabaseStorage();
 
-// Initialize database with default data
+// Initialize database 
 async function initializeDatabase() {
   try {
-    // Create default users for testing
-    const defaultUsers = [
-      { username: "erik_bold", password: "password", displayName: "Erik the Bold", rating: 1420, wins: 15, losses: 8 },
-      { username: "ragnar_iron", password: "password", displayName: "Ragnar Iron", rating: 1650, wins: 23, losses: 12 },
-      { username: "freya_shield", password: "password", displayName: "Freya Shield", rating: 1580, wins: 19, losses: 11 },
-    ];
-
-    for (const userData of defaultUsers) {
-      const existingUser = await storage.getUserByUsername(userData.username);
-      if (!existingUser) {
-        await storage.createUser(userData);
-      }
-    }
-
-    // Create some waiting games
-    const waitingGames = await storage.getWaitingGames();
-    if (waitingGames.length === 0) {
-      await storage.createGame({
-        hostId: 1,
-        boardState: createInitialBoard(),
-        hostRole: "defender",
-        timeControl: "10+5",
-      });
-
-      await storage.createGame({
-        hostId: 2,
-        boardState: createInitialBoard(),
-        hostRole: "attacker",
-        timeControl: "15+10",
-      });
-    }
+    console.log('Database initialized successfully');
   } catch (error) {
     console.error('Failed to initialize database:', error);
   }

@@ -31,6 +31,14 @@ export default function Lobby() {
     timeControl: "15+10",
   });
 
+  // Check if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  
+  if (!currentUser) {
+    setLocation("/auth");
+    return null;
+  }
+
   const { data: waitingGames = [], isLoading } = useQuery<WaitingGame[]>({
     queryKey: ['/api/games/waiting'],
     refetchInterval: 5000, // Refresh every 5 seconds
@@ -39,7 +47,7 @@ export default function Lobby() {
   const createGameMutation = useMutation({
     mutationFn: async (gameData: any) => {
       const response = await apiRequest('POST', '/api/games/create', {
-        hostId: 1, // Mock user ID
+        hostId: currentUser.id,
         boardState: [], // Will be populated by server
         ...gameData,
       });
@@ -65,7 +73,7 @@ export default function Lobby() {
   const joinGameMutation = useMutation({
     mutationFn: async (gameId: number) => {
       const response = await apiRequest('POST', `/api/games/${gameId}/join`, {
-        userId: 2, // Mock guest user ID
+        userId: currentUser.id,
       });
       return response.json();
     },

@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,10 @@ export default function Game() {
       socket.send({
         type: 'join_game',
         gameId,
-        userId: 1, // Mock user ID
+        userId: currentUser.id,
       });
     }
-  }, [socket, gameId, isConnected]);
+  }, [socket, gameId, isConnected, currentUser.id]);
 
   if (isLoading) {
     return (
@@ -62,11 +62,20 @@ export default function Game() {
     );
   }
 
+  // Check if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  
+  if (!currentUser) {
+    navigate("/auth");
+    return null;
+  }
+
   const currentGame = gameState || game;
-  const userId = 1; // Mock user ID - in production this would come from auth
-  // For testing, allow playing as both sides
-  const userRole = currentGame?.currentPlayer || "attacker";
-  const isPlayerTurn = true; // Allow playing both sides for testing
+  const userId = currentUser.id;
+  const userRole = currentGame?.hostId === userId ? currentGame?.hostRole : 
+                   (currentGame?.hostRole === "defender" ? "attacker" : "defender");
+  const isPlayerTurn = (currentGame?.currentPlayer === "defender" && userRole === "defender") ||
+                       (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
   const isGameActive = currentGame?.status === "active";
 
   return (

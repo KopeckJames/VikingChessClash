@@ -5,6 +5,7 @@ import { Crown, Shield, Sword, Users, Zap } from "lucide-react";
 import { useEffect } from "react";
 import { updateSEO, seoPages } from "@/lib/seo";
 import { analytics } from "@/lib/analytics";
+import UserMenu from "@/components/user-menu";
 
 export default function Home() {
   useEffect(() => {
@@ -12,6 +13,10 @@ export default function Home() {
     analytics.initialize();
     analytics.trackPageView("/", "Viking Chess Online - Home");
   }, []);
+
+  // Check if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -27,9 +32,21 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-            <span className="text-sm text-gray-300">Online</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-sm text-gray-300">Online</span>
+            </div>
+            
+            {currentUser ? (
+              <UserMenu user={currentUser} />
+            ) : (
+              <Link href="/auth">
+                <Button variant="outline" className="border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-yellow-900">
+                  Enter Battle
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>

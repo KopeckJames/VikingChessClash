@@ -64,9 +64,9 @@ export default function Game() {
 
   const currentGame = gameState || game;
   const userId = 1; // Mock user ID - in production this would come from auth
-  // For testing, let's make the user the attacker since attackers go first
-  const userRole = "attacker";
-  const isPlayerTurn = currentGame?.currentPlayer === userRole;
+  // For testing, allow playing as both sides
+  const userRole = currentGame?.currentPlayer || "attacker";
+  const isPlayerTurn = true; // Allow playing both sides for testing
   const isGameActive = currentGame?.status === "active";
 
   return (
@@ -149,7 +149,9 @@ export default function Game() {
                   
                   <div className="flex items-center space-x-2">
                     <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">Move 23</span>
+                    <span className="text-sm text-gray-400">
+                      Move {((currentGame?.moveHistory as any[])?.length || 0) + 1}
+                    </span>
                   </div>
                 </div>
               </CardHeader>

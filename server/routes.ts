@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertGameSchema, insertChatMessageSchema, type WSMessage, type Move, type Position, type PieceType, type BoardState } from "@shared/schema";
+import { calculateEloRating, getRankByRating } from "@shared/rating-system";
 import { z } from "zod";
 
 // Game logic functions

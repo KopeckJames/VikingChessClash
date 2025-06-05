@@ -7,7 +7,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUserStats(id: number, wins: number, losses: number, rating: number): Promise<void>;
+  updateUserStats(id: number, wins: number, losses: number, draws: number, rating: number, winStreak: number, bestRating: number, gamesPlayed: number): Promise<void>;
   updateUserLastSeen(id: number): Promise<void>;
   getUserStats(): Promise<{ totalUsers: number; onlineUsers: number; offlineUsers: number }>;
 
@@ -44,10 +44,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserStats(id: number, wins: number, losses: number, rating: number): Promise<void> {
+  async updateUserStats(id: number, wins: number, losses: number, draws: number, rating: number, winStreak: number, bestRating: number, gamesPlayed: number): Promise<void> {
     await db
       .update(users)
-      .set({ wins, losses, rating })
+      .set({ 
+        wins, 
+        losses, 
+        draws, 
+        rating, 
+        winStreak, 
+        bestRating: Math.max(bestRating, rating),
+        gamesPlayed 
+      })
       .where(eq(users.id, id));
   }
 

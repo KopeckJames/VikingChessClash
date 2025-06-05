@@ -13,8 +13,17 @@ import type { Game } from "@shared/schema";
 
 export default function Game() {
   const { id } = useParams();
+  const [, navigate] = useLocation();
   const gameId = parseInt(id || "0");
   
+  // Check if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  
+  if (!currentUser) {
+    navigate("/auth");
+    return null;
+  }
+
   const { data: game, isLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
@@ -60,14 +69,6 @@ export default function Game() {
         </div>
       </div>
     );
-  }
-
-  // Check if user is authenticated
-  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-  
-  if (!currentUser) {
-    navigate("/auth");
-    return null;
   }
 
   const currentGame = gameState || game;

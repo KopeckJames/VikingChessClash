@@ -1,0 +1,230 @@
+import { useParams, Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Crown, Shield, Sword, Clock, Flag, Handshake, MessageCircle } from "lucide-react";
+import GameBoard from "@/components/game-board";
+import Chat from "@/components/chat";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useGameState } from "@/hooks/use-game-state";
+import type { Game } from "@shared/schema";
+
+export default function Game() {
+  const { id } = useParams();
+  const [, navigate] = useLocation();
+  const gameId = parseInt(id || "0");
+  
+  // Check if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  
+  if (!currentUser) {
+    navigate("/auth");
+    return null;
+  }
+
+  const { data: game, isLoading } = useQuery<Game>({
+    queryKey: [`/api/games/${gameId}`],
+    enabled: !!gameId,
+  });
+
+  const { socket, isConnected } = useWebSocket();
+  const { gameState, makeMove, sendChatMessage, latestChatMessage } = useGameState(gameId, socket);
+
+  useEffect(() => {
+    if (socket && gameId && isConnected) {
+      // Join the game room
+      socket.send({
+        type: 'join_game',
+        gameId,
+        userId: currentUser.id,
+      });
+    }
+  }, [socket, gameId, isConnected, currentUser.id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Crown className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-spin" />
+          <h2 className="text-2xl font-bold text-white mb-2">Loading Battle...</h2>
+          <p className="text-gray-400">Preparing the battlefield</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!game) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Crown className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Game Not Found</h2>
+          <p className="text-gray-400 mb-6">This battle does not exist or has been removed</p>
+          <Link href="/lobby">
+            <Button className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-yellow-900">
+              Back to Lobby
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const currentGame = gameState || game;
+  const userId = currentUser.id;
+  const userRole = currentGame?.hostId === userId ? currentGame?.hostRole : 
+                   (currentGame?.hostRole === "defender" ? "attacker" : "defender");
+  const isPlayerTurn = (currentGame?.currentPlayer === "defender" && userRole === "defender") ||
+                       (currentGame?.currentPlayer === "attacker" && userRole === "attacker");
+  const isGameActive = currentGame?.status === "active";
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <header className="border-b border-gray-800 bg-slate-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/lobby">
+              <Button variant="ghost" className="text-gray-400 hover:text-white">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Lobby
+              </Button>
+            </Link>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Crown className="w-5 h-5 text-yellow-500" />
+                <span className="text-white font-semibold">Viking Chess</span>
+              </div>
+              
+              <div className="text-sm text-gray-400">
+                Playing as: <span className="text-white">{currentUser.displayName}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Game Board */}
+          <div className="xl:col-span-2">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      {currentGame.currentPlayer === "attacker" ? (
+                        <>
+                          <Sword className="w-5 h-5 text-red-400" />
+                          <span className="font-semibold text-red-400">Attackers' Turn</span>
+                        </>
+                      ) : (
+                        <>
+                          <Shield className="w-5 h-5 text-blue-400" />
+                          <span className="font-semibold text-blue-400">Defenders' Turn</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {isPlayerTurn && isGameActive && (
+                      <Badge variant="default" className="bg-green-600 text-white">
+                        Your Turn
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">
+                      Move {((currentGame?.moveHistory as any[])?.length || 0) + 1}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <GameBoard 
+                  game={currentGame} 
+                  onMove={makeMove}
+                  isPlayerTurn={isPlayerTurn}
+                  userRole={userRole as "attacker" | "defender"}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Game Controls */}
+            <div className="flex gap-4 mt-6">
+              <Button 
+                variant="destructive" 
+                className="flex-1"
+                disabled={!isGameActive}
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Resign
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 border-gray-600"
+                disabled={!isGameActive}
+              >
+                <Handshake className="w-4 h-4 mr-2" />
+                Offer Draw
+              </Button>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Game Info */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Crown className="w-5 h-5 mr-2 text-yellow-500" />
+                  Battle Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-red-900/20 rounded-lg border border-red-800/30">
+                    <div className="flex items-center justify-center mb-2">
+                      <Sword className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div className="text-sm text-red-300 font-medium">Attackers</div>
+                    <div className="text-xs text-red-400 mt-1">24 pieces</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-900/20 rounded-lg border border-blue-800/30">
+                    <div className="flex items-center justify-center mb-2">
+                      <Shield className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="text-sm text-blue-300 font-medium">Defenders</div>
+                    <div className="text-xs text-blue-400 mt-1">12 pieces + King</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Status:</span>
+                    <span className="text-white capitalize">{currentGame.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Time Control:</span>
+                    <span className="text-white">{currentGame.timeControl}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Your Role:</span>
+                    <span className="text-white capitalize">{userRole}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chat */}
+            <Chat gameId={gameId} onSendMessage={sendChatMessage} newMessage={latestChatMessage} />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

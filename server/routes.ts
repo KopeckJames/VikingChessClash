@@ -348,7 +348,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Update game status
               const updatedGame = await storage.updateGame(resignGameId, {
                 status: 'completed',
-                winner: winnerRole,
                 winCondition: 'resignation'
               });
               
@@ -358,13 +357,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const guestUser = resignGame.guestId ? await storage.getUser(resignGame.guestId) : null;
                 
                 if (hostUser && guestUser) {
-                  if (winner === 'host') {
-                    await storage.updateUserStats(hostUser.id, hostUser.wins + 1, hostUser.losses, Math.min(hostUser.rating + 25, 3000));
-                    await storage.updateUserStats(guestUser.id, guestUser.wins, guestUser.losses + 1, Math.max(guestUser.rating - 25, 500));
-                  } else {
-                    await storage.updateUserStats(hostUser.id, hostUser.wins, hostUser.losses + 1, Math.max(hostUser.rating - 25, 500));
-                    await storage.updateUserStats(guestUser.id, guestUser.wins + 1, guestUser.losses, Math.min(guestUser.rating + 25, 3000));
-                  }
+                  // Calculate Elo rating changes
+                  const hostResult = winner === 'host' ? 'win' : 'loss';
+                  const guestResult = winner === 'guest' ? 'win' : 'loss';
+                  
+                  const hostRating = calculateEloRating(
+                    hostUser.rating,
+                    guestUser.rating,
+                    hostResult,
+                    resignGame.hostRole as 'attacker' | 'defender',
+                    hostUser.gamesPlayed || 0,
+                    resignGame.timeControl,
+                    5 // Early resignation penalty
+                  );
+                  
+                  const guestRating = calculateEloRating(
+                    guestUser.rating,
+                    hostUser.rating,
+                    guestResult,
+                    (resignGame.hostRole === 'attacker' ? 'defender' : 'attacker') as 'attacker' | 'defender',
+                    guestUser.gamesPlayed || 0,
+                    resignGame.timeControl,
+                    5 // Early resignation penalty
+                  );
+                  
+                  // Update win streaks
+                  const hostWinStreak = hostResult === 'win' ? (hostUser.winStreak || 0) + 1 : 0;
+                  const guestWinStreak = guestResult === 'win' ? (guestUser.winStreak || 0) + 1 : 0;
+                  
+                  // Update user stats with comprehensive Elo system
+                  await storage.updateUserStats(
+                    hostUser.id,
+                    hostResult === 'win' ? hostUser.wins + 1 : hostUser.wins,
+                    hostResult === 'loss' ? hostUser.losses + 1 : hostUser.losses,
+                    hostUser.draws || 0,
+                    hostRating.newRating,
+                    hostWinStreak,
+                    Math.max(hostUser.bestRating || hostUser.rating, hostRating.newRating),
+                    (hostUser.gamesPlayed || 0) + 1
+                  );
+                  
+                  await storage.updateUserStats(
+                    guestUser.id,
+                    guestResult === 'win' ? guestUser.wins + 1 : guestUser.wins,
+                    guestResult === 'loss' ? guestUser.losses + 1 : guestUser.losses,
+                    guestUser.draws || 0,
+                    guestRating.newRating,
+                    guestWinStreak,
+                    Math.max(guestUser.bestRating || guestUser.rating, guestRating.newRating),
+                    (guestUser.gamesPlayed || 0) + 1
+                  );
                 }
                 
                 // Broadcast game update to all players in the room

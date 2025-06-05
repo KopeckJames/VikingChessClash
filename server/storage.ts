@@ -23,6 +23,9 @@ export interface IStorage {
   // Chat operations
   addChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getGameChatMessages(gameId: number): Promise<(ChatMessage & { senderName: string })[]>;
+
+  // Leaderboard operations
+  getLeaderboard(period?: 'all' | 'month' | 'week'): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -147,6 +150,26 @@ export class DatabaseStorage implements IStorage {
       .orderBy(chatMessages.createdAt);
 
     return messages;
+  }
+
+  async getLeaderboard(period: 'all' | 'month' | 'week' = 'all'): Promise<User[]> {
+    let query = db.select().from(users);
+    
+    if (period === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      query = query.where(gte(users.lastSeen, monthAgo));
+    } else if (period === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      query = query.where(gte(users.lastSeen, weekAgo));
+    }
+    
+    const result = await query
+      .orderBy(desc(users.rating), desc(users.wins), asc(users.losses))
+      .limit(50);
+    
+    return result;
   }
 }
 

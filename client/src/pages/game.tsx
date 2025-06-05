@@ -10,6 +10,7 @@ import Chat from "@/components/chat";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useGameState } from "@/hooks/use-game-state";
 import { updateSEO, seoPages } from "@/lib/seo";
+import BreadcrumbNav from "@/components/breadcrumb-nav";
 import type { Game } from "@shared/schema";
 
 export default function Game() {
@@ -86,6 +87,7 @@ export default function Game() {
 
   return (
     <div className="min-h-screen">
+      <BreadcrumbNav />
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-lg border-b border-white/10 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">

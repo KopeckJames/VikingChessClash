@@ -10,6 +10,7 @@ import { Sword, Shield, Crown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { updateSEO, seoPages } from "@/lib/seo";
+import BreadcrumbNav from "@/components/breadcrumb-nav";
 
 export default function Auth() {
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <BreadcrumbNav />
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Crown, Plus, Zap, Users, Clock, Star } from "lucide-react";
 import LobbyList from "@/components/lobby-list";
 import { updateSEO, seoPages } from "@/lib/seo";
+import BreadcrumbNav from "@/components/breadcrumb-nav";
 
 type WaitingGame = {
   id: number;
@@ -156,6 +157,7 @@ export default function Lobby() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          <BreadcrumbNav />
           
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

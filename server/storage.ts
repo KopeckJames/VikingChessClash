@@ -8,6 +8,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserStats(id: number, wins: number, losses: number, rating: number): Promise<void>;
+  updateUserLastSeen(id: number): Promise<void>;
+  getUserStats(): Promise<{ totalUsers: number; onlineUsers: number; offlineUsers: number }>;
 
   // Game operations
   createGame(game: InsertGame): Promise<Game>;
@@ -47,6 +49,25 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ wins, losses, rating })
       .where(eq(users.id, id));
+  }
+
+  async updateUserLastSeen(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastSeen: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async getUserStats(): Promise<{ totalUsers: number; onlineUsers: number; offlineUsers: number }> {
+    const allUsers = await db.select().from(users);
+    const totalUsers = allUsers.length;
+    
+    // Consider users online if they were active in the last 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const onlineUsers = allUsers.filter(user => user.lastSeen > fiveMinutesAgo).length;
+    const offlineUsers = totalUsers - onlineUsers;
+    
+    return { totalUsers, onlineUsers, offlineUsers };
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {

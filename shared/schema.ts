@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   rating: integer("rating").notNull().default(1200),
   wins: integer("wins").notNull().default(0),
   losses: integer("losses").notNull().default(0),
+  lastSeen: timestamp("last_seen").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

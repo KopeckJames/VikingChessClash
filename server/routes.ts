@@ -400,6 +400,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // REST API routes
+  app.get('/api/users/stats', async (req, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch user statistics' });
+    }
+  });
+
   app.get('/api/games/waiting', async (req, res) => {
     try {
       const games = await storage.getWaitingGames();

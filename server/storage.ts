@@ -1,6 +1,6 @@
 import { users, games, chatMessages, type User, type InsertUser, type Game, type InsertGame, type ChatMessage, type InsertChatMessage, type BoardState, type PieceType } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, asc, gte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -153,19 +153,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLeaderboard(period: 'all' | 'month' | 'week' = 'all'): Promise<User[]> {
-    let query = db.select().from(users);
-    
-    if (period === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      query = query.where(gte(users.lastSeen, monthAgo));
-    } else if (period === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      query = query.where(gte(users.lastSeen, weekAgo));
-    }
-    
-    const result = await query
+    const result = await db
+      .select()
+      .from(users)
       .orderBy(desc(users.rating), desc(users.wins), asc(users.losses))
       .limit(50);
     

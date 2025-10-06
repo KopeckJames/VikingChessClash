@@ -1,0 +1,2100 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hnefatafl - Viking Chess</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'viking-brown': '#8B4513',
+                        'viking-copper': '#D2691E',
+                        'royal-blue': '#4169E1',
+                        'forest-green': '#32CD32',
+                        'gold': '#FFD700',
+                        'battle-red': '#FF6347',
+                        'dark-wood': '#2C1810',
+                        'light-parchment': '#F5DEB3',
+                        'ios-dark': '#1C1C1E',
+                        'ios-light': '#F2F2F7'
+                    },
+                    fontFamily: {
+                        'cinzel': ['Cinzel', 'serif'],
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'piece-move': 'movepiece 0.3s ease-in-out',
+                        'piece-capture': 'capture 0.5s ease-in-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        movepiece: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
+                            '100%': { transform: 'scale(1)' }
+                        },
+                        capture: {
+                            '0%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
+                            '50%': { transform: 'scale(1.2) rotate(180deg)', opacity: '0.5' },
+                            '100%': { transform: 'scale(0) rotate(360deg)', opacity: '0' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-ios-dark text-white font-inter">
+    
+    <!-- @COMPONENT: MainApp [main container with tab navigation] -->
+    <div class="min-h-screen bg-gradient-to-b from-ios-dark to-dark-wood">
+        
+        <!-- @COMPONENT: NavigationHeader [top navigation bar] -->
+        <header class="sticky top-0 z-50 bg-ios-dark/90 backdrop-blur-lg border-b border-gray-800">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-gold to-viking-copper rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chess-king text-dark-wood text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-cinzel font-bold text-xl text-gold">Hnefatafl</h1>
+                        <p class="text-xs text-gray-400" data-mock="true">Viking Chess</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center" data-event="click:openSettings">
+                        <i class="fas fa-cog text-gray-300"></i>
+                    </button>
+                    <div class="w-10 h-10 bg-gradient-to-br from-royal-blue to-forest-green rounded-xl flex items-center justify-center" data-bind="user.avatar">
+                        <span class="text-white font-semibold text-sm" data-mock="true">JD</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- @COMPONENT: MainContent [tab-based content area] -->
+        <main class="pb-20">
+            
+            <!-- @STATE: activeTab:string = 'lobby' -->
+            <!-- @COMPONENT: GameLobby [multiplayer lobby interface] -->
+            <div id="lobby-tab" class="px-4 py-6">
+                
+                <!-- Player Status Card -->
+                <div class="bg-gradient-to-r from-viking-brown/20 to-viking-copper/20 border border-viking-copper/30 rounded-2xl p-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-royal-blue to-forest-green rounded-xl flex items-center justify-center">
+                                <span class="text-white font-bold" data-bind="user.initials" data-mock="true">JD</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-white" data-bind="user.displayName" data-mock="true">Jarl Destroyer</h3>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-forest-green rounded-full animate-pulse-slow"></div>
+                                    <span class="text-sm text-gray-300">Online</span>
+                                    <span class="text-xs text-gold">⚔️ 1,247 Rating</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-cinzel font-bold text-gold" data-bind="user.wins" data-mock="true">23</div>
+                            <div class="text-xs text-gray-400">Victories</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button class="bg-gradient-to-br from-gold to-viking-copper p-4 rounded-2xl text-center group hover:scale-105 transition-transform" data-event="click:createGame">
+                        <div class="w-12 h-12 bg-dark-wood/30 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:bg-dark-wood/50 transition-colors">
+                            <i class="fas fa-plus text-2xl text-white"></i>
+                        </div>
+                        <h3 class="font-semibold text-dark-wood">Create Game</h3>
+                        <p class="text-xs text-dark-wood/70">Start new battle</p>
+                    </button>
+                    
+                    <button class="bg-gradient-to-br from-royal-blue to-forest-green p-4 rounded-2xl text-center group hover:scale-105 transition-transform" data-event="click:quickMatch">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                            <i class="fas fa-bolt text-2xl text-white"></i>
+                        </div>
+                        <h3 class="font-semibold text-white">Quick Match</h3>
+                        <p class="text-xs text-white/70">Find opponent</p>
+                    </button>
+                </div>
+
+                <!-- Active Games -->
+                <div class="mb-6">
+                    <h2 class="font-cinzel text-xl font-bold text-gold mb-4">⚔️ Active Battles</h2>
+                    
+                    <!-- @MAP: activeGames.map(game => ( -->
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 mb-3" data-mock="true">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <!-- A medieval warrior with braided beard and horned helmet in anime style -->
+                                <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=64&h=64" alt="Viking Warrior" class="w-10 h-10 rounded-xl object-cover" data-mock="true">
+                                <div>
+                                    <h4 class="font-semibold text-white" data-mock="true">Erik Bloodaxe</h4>
+                                    <div class="flex items-center space-x-1">
+                                        <div class="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+                                        <span class="text-xs text-gray-300">Your turn</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-semibold text-gold">12:34</div>
+                                <div class="text-xs text-gray-400">Remaining</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-gray-400">Turn 18 • King at E6</div>
+                            <button class="bg-viking-copper hover:bg-viking-copper/80 px-4 py-2 rounded-xl text-sm font-medium text-white transition-colors" data-event="click:resumeGame">
+                                Resume Battle
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+
+                <!-- Available Games -->
+                <div>
+                    <h2 class="font-cinzel text-xl font-bold text-gold mb-4">🛡️ Open Challenges</h2>
+                    
+                    <!-- @MAP: availableGames.map(game => ( -->
+                    <div class="bg-gray-800/30 border border-gray-700 rounded-2xl p-4 mb-3" data-mock="true">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <!-- A fierce Nordic warrior woman with braided red hair in anime style -->
+                                <img src="https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=64&h=64" alt="Viking Shield Maiden" class="w-10 h-10 rounded-xl object-cover" data-mock="true">
+                                <div>
+                                    <h4 class="font-semibold text-white" data-mock="true">Freydis Shieldmaiden</h4>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs text-gray-300">⚔️ 1,089 Rating</span>
+                                        <span class="text-xs text-royal-blue">15 min/turn</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="bg-forest-green hover:bg-forest-green/80 px-4 py-2 rounded-xl text-sm font-medium text-white transition-colors" data-event="click:joinGame">
+                                Accept Challenge
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+
+            <!-- @COMPONENT: GameBoard [active game interface] -->
+            <div id="game-tab" class="hidden px-4 py-6">
+                
+                <!-- Game Header -->
+                <div class="bg-gradient-to-r from-viking-brown/20 to-viking-copper/20 border border-viking-copper/30 rounded-2xl p-4 mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <!-- A medieval warrior with braided beard and horned helmet in anime style -->
+                            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=48&h=48" alt="Opponent Viking" class="w-12 h-12 rounded-xl object-cover" data-mock="true">
+                            <div>
+                                <h3 class="font-semibold text-white" data-mock="true">Erik Bloodaxe</h3>
+                                <div class="text-xs text-gray-300">Attackers • ⚔️ 1,156</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-cinzel font-bold text-gold">08:42</div>
+                            <div class="text-xs text-gray-400">Time left</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center space-x-4 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-battle-red rounded-full"></div>
+                            <span class="text-gray-300">20 Attackers</span>
+                        </div>
+                        <div class="text-gold">vs</div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full"></div>
+                            <span class="text-gray-300">11 Defenders</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: HnefataflBoard [11x11 game board with pieces] -->
+                <div class="bg-gradient-to-br from-light-parchment to-viking-copper/20 p-4 rounded-2xl mb-4 mx-auto" style="max-width: 400px;">
+                    <div class="grid grid-cols-11 gap-1 aspect-square">
+                        <!-- @FUNCTIONALITY: This board should implement authentic Hnefatafl rules with 11x11 grid -->
+                        <!-- Row 1 -->
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        
+                        <!-- Row 2 -->
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        
+                        <!-- Continue pattern for remaining rows with defenders in center formation -->
+                        <!-- Row 3 -->
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+
+                        <!-- Row 4 -->
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Row 5 -->
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Row 6 - Center row with King -->
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <!-- King piece in center -->
+                        <div class="aspect-square bg-gold/40 border-2 border-gold rounded-sm flex items-center justify-center relative" data-piece="king">
+                            <div class="w-4 h-4 bg-gold rounded-full shadow-lg relative">
+                                <i class="fas fa-crown absolute inset-0 flex items-center justify-center text-dark-wood text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Continue symmetric pattern for rows 7-11 -->
+                        <!-- Row 7 -->
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Row 8 -->
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Row 9 -->
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-royal-blue/30 border-2 border-royal-blue rounded-sm flex items-center justify-center" data-piece="defender">
+                            <div class="w-3 h-3 bg-royal-blue rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+
+                        <!-- Row 10 -->
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+
+                        <!-- Row 11 -->
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-battle-red/30 border-2 border-battle-red rounded-sm flex items-center justify-center" data-piece="attacker">
+                            <div class="w-3 h-3 bg-battle-red rounded-full shadow-sm"></div>
+                        </div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/10 rounded-sm flex items-center justify-center"></div>
+                        <div class="aspect-square bg-dark-wood/20 rounded-sm flex items-center justify-center"></div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: HnefataflBoard -->
+
+                <!-- Player Info Bottom -->
+                <div class="bg-gradient-to-r from-royal-blue/20 to-forest-green/20 border border-royal-blue/30 rounded-2xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-royal-blue to-forest-green rounded-xl flex items-center justify-center">
+                                <span class="text-white font-bold" data-bind="user.initials" data-mock="true">JD</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-white" data-bind="user.displayName" data-mock="true">Jarl Destroyer</h3>
+                                <div class="text-xs text-gray-300">Defenders • Your turn</div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-cinzel font-bold text-gold">12:18</div>
+                            <div class="text-xs text-gray-400">Your time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Actions -->
+                <div class="flex space-x-3 mt-4">
+                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-2xl text-center transition-colors" data-event="click:offerDraw">
+                        <i class="fas fa-handshake text-gray-300 mb-1"></i>
+                        <div class="text-sm font-medium text-gray-300">Offer Draw</div>
+                    </button>
+                    <button class="flex-1 bg-battle-red/20 hover:bg-battle-red/30 border border-battle-red py-3 rounded-2xl text-center transition-colors" data-event="click:forfeit">
+                        <i class="fas fa-flag text-battle-red mb-1"></i>
+                        <div class="text-sm font-medium text-battle-red">Forfeit</div>
+                    </button>
+                    <button class="flex-1 bg-viking-copper hover:bg-viking-copper/80 py-3 rounded-2xl text-center transition-colors" data-event="click:openChat">
+                        <i class="fas fa-comment text-white mb-1"></i>
+                        <div class="text-sm font-medium text-white">Chat</div>
+                    </button>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: GameBoard -->
+
+        </main>
+
+        <!-- @COMPONENT: TabNavigation [bottom navigation] -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-ios-dark/90 backdrop-blur-lg border-t border-gray-800">
+            <div class="flex items-center justify-around py-2">
+                <button class="flex flex-col items-center py-2 px-4 text-gold" data-event="click:showLobby" data-tab="lobby">
+                    <i class="fas fa-shield-alt text-xl mb-1"></i>
+                    <span class="text-xs font-medium">Lobby</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400" data-event="click:showGame" data-tab="game">
+                    <i class="fas fa-chess-board text-xl mb-1"></i>
+                    <span class="text-xs font-medium">Game</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400" data-event="click:showLeaderboard" data-tab="leaderboard">
+                    <i class="fas fa-trophy text-xl mb-1"></i>
+                    <span class="text-xs font-medium">Leaderboard</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400" data-event="click:showProfile" data-tab="profile">
+                    <i class="fas fa-user text-xl mb-1"></i>
+                    <span class="text-xs font-medium">Profile</span>
+                </button>
+            </div>
+        </nav>
+        <!-- @END_COMPONENT: TabNavigation -->
+
+    </div>
+    <!-- @END_COMPONENT: MainApp -->
+
+    <!-- @COMPONENT: ChatOverlay [sliding chat interface] -->
+    <div id="chat-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden" data-event="click:closeChat">
+        <div class="absolute bottom-0 left-0 right-0 bg-ios-dark rounded-t-3xl p-4 max-h-96" data-implementation="Should prevent event bubbling when clicking inside">
+            <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
+            <h3 class="font-cinzel text-lg font-bold text-gold mb-4">Battle Chat</h3>
+            
+            <div class="space-y-3 mb-4 max-h-48 overflow-y-auto">
+                <div class="flex items-start space-x-3" data-mock="true">
+                    <!-- A medieval warrior with braided beard and horned helmet in anime style -->
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32" alt="Erik" class="w-8 h-8 rounded-lg object-cover">
+                    <div class="bg-gray-800 rounded-2xl px-3 py-2">
+                        <p class="text-white text-sm">Good luck, worthy opponent!</p>
+                        <span class="text-xs text-gray-400">2 min ago</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-3 justify-end" data-mock="true">
+                    <div class="bg-viking-copper rounded-2xl px-3 py-2">
+                        <p class="text-white text-sm">May the best Viking win! ⚔️</p>
+                        <span class="text-xs text-white/70">1 min ago</span>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-br from-royal-blue to-forest-green rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm" data-mock="true">JD</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                <input type="text" placeholder="Type your message..." class="flex-1 bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3 text-white placeholder-gray-400 focus:border-viking-copper focus:outline-none" data-implementation="Should handle message sending on enter key">
+                <button class="bg-viking-copper hover:bg-viking-copper/80 w-12 h-12 rounded-2xl flex items-center justify-center transition-colors" data-event="click:sendMessage">
+                    <i class="fas fa-paper-plane text-white"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: ChatOverlay -->
+
+    <script>
+        (function() {
+            // Tab switching functionality
+            const tabs = ['lobby', 'game', 'leaderboard', 'profile'];
+            let currentTab = 'lobby';
+
+            function showTab(tabName) {
+                // Hide all tabs
+                tabs.forEach(tab => {
+                    const element = document.getElementById(`${tab}-tab`);
+                    if (element) {
+                        element.classList.add('hidden');
+                    }
+                });
+
+                // Show selected tab
+                const selectedTab = document.getElementById(`${tabName}-tab`);
+                if (selectedTab) {
+                    selectedTab.classList.remove('hidden');
+                }
+
+                // Update navigation
+                document.querySelectorAll('[data-tab]').forEach(btn => {
+                    btn.classList.remove('text-gold');
+                    btn.classList.add('text-gray-400');
+                });
+
+                const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-gray-400');
+                    activeBtn.classList.add('text-gold');
+                }
+
+                currentTab = tabName;
+            }
+
+            // Game board interaction
+            function initializeGameBoard() {
+                const pieces = document.querySelectorAll('[data-piece]');
+                let selectedPiece = null;
+                let validMoves = [];
+
+                pieces.forEach(piece => {
+                    piece.addEventListener('click', function() {
+                        // Clear previous selection
+                        document.querySelectorAll('.bg-gold\\/60').forEach(el => {
+                            el.classList.remove('bg-gold/60', 'border-gold');
+                        });
+
+                        if (selectedPiece === this) {
+                            selectedPiece = null;
+                            validMoves = [];
+                            return;
+                        }
+
+                        selectedPiece = this;
+                        
+                        // Highlight selected piece
+                        this.classList.add('bg-gold/60', 'border-gold');
+                        
+                        // Add move animation
+                        this.style.animation = 'movepiece 0.3s ease-in-out';
+                        setTimeout(() => {
+                            this.style.animation = '';
+                        }, 300);
+
+                        // Show valid moves (simplified example)
+                        showValidMoves(this);
+                    });
+                });
+
+                function showValidMoves(piece) {
+                    // This would implement actual Hnefatafl movement rules
+                    // For demo purposes, showing adjacent empty squares
+                    const boardSquares = document.querySelectorAll('.aspect-square');
+                    
+                    // Clear previous highlights
+                    boardSquares.forEach(square => {
+                        square.classList.remove('bg-forest-green/30', 'border-forest-green');
+                    });
+
+                    // Simplified valid move highlighting
+                    // In real implementation, this would calculate based on Hnefatafl rules
+                    const emptySquares = Array.from(boardSquares).filter(square => 
+                        !square.hasAttribute('data-piece') && 
+                        !square.children.length
+                    );
+
+                    emptySquares.slice(0, 3).forEach(square => {
+                        square.classList.add('bg-forest-green/30', 'border-forest-green');
+                        square.style.cursor = 'pointer';
+                    });
+                }
+            }
+
+            // Chat functionality
+            function initializeChat() {
+                const chatOverlay = document.getElementById('chat-overlay');
+                const openChatBtn = document.querySelector('[data-event="click:openChat"]');
+                
+                if (openChatBtn) {
+                    openChatBtn.addEventListener('click', () => {
+                        chatOverlay.classList.remove('hidden');
+                    });
+                }
+
+                chatOverlay.addEventListener('click', (e) => {
+                    if (e.target === chatOverlay) {
+                        chatOverlay.classList.add('hidden');
+                    }
+                });
+
+                // Prevent closing when clicking inside chat
+                chatOverlay.querySelector('.absolute').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+
+            // Navigation event listeners
+            document.addEventListener('DOMContentLoaded', function() {
+                // Tab navigation
+                document.querySelectorAll('[data-tab]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const tab = e.currentTarget.getAttribute('data-tab');
+                        showTab(tab);
+                    });
+                });
+
+                // Initialize game features
+                initializeGameBoard();
+                initializeChat();
+
+                // Game action buttons
+                document.querySelectorAll('[data-event]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const action = this.getAttribute('data-event');
+                        console.log(`Action triggered: ${action}`);
+                        
+                        // Add visual feedback
+                        this.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            this.style.transform = '';
+                        }, 150);
+                    });
+                });
+
+                // Initialize with lobby tab
+                showTab('lobby');
+            });
+
+            // Simulated real-time updates
+            function simulateRealtimeUpdates() {
+                setInterval(() => {
+                    // Update timer (simplified)
+                    const timers = document.querySelectorAll('.text-lg.font-cinzel');
+                    timers.forEach(timer => {
+                        if (timer.textContent.includes(':')) {
+                            // Simulate countdown
+                            const time = timer.textContent.split(':');
+                            let minutes = parseInt(time[0]);
+                            let seconds = parseInt(time[1]);
+                            
+                            seconds--;
+                            if (seconds < 0) {
+                                seconds = 59;
+                                minutes--;
+                            }
+                            
+                            if (minutes >= 0) {
+                                timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            }
+                        }
+                    });
+                }, 1000);
+            }
+
+            // Start real-time simulation
+            simulateRealtimeUpdates();
+        })();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hnefatafl - Viking Chess iOS Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'norse-blue': '#2C3E50',
+                    'viking-amber': '#E67E22',
+                    'bronze': '#8B4513',
+                    'aged-wood': '#D4B896',
+                    'wood-dark': '#A0845C',
+                },
+                fontFamily: {
+                    'sf-pro': ['SF Pro Display', 'system-ui', 'sans-serif'],
+                    'sf-rounded': ['SF Pro Rounded', 'system-ui', 'sans-serif'],
+                },
+                animation: {
+                    'piece-move': 'pieceMove 0.3s ease-in-out',
+                    'piece-capture': 'pieceCapture 0.5s ease-in-out',
+                    'glow': 'glow 2s ease-in-out infinite alternate',
+                }
+            }
+        }
+    };
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes pieceMove {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes pieceCapture {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.5; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(230, 126, 34, 0.5); }
+            to { box-shadow: 0 0 20px rgba(230, 126, 34, 0.8); }
+        }
+
+        .piece-king {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            position: relative;
+        }
+        
+        .piece-king::before {
+            content: '♔';
+            font-size: 1.5em;
+            color: #8B4513;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .piece-defender {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            position: relative;
+        }
+        
+        .piece-defender::before {
+            content: '⚔';
+            font-size: 1.2em;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .piece-attacker {
+            background: linear-gradient(135deg, #E74C3C, #C0392B);
+            position: relative;
+        }
+        
+        .piece-attacker::before {
+            content: '⚡';
+            font-size: 1.2em;
+            color: #FFD700;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .valid-move {
+            background: rgba(46, 204, 113, 0.3);
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+        
+        .selected-piece {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(230, 126, 34, 0.8);
+        }
+
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sf-pro">
+    <!-- @COMPONENT: AppContainer -->
+    <div class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+        
+        <!-- iOS Status Bar Simulation -->
+        <div class="bg-black text-white text-xs py-1 px-4 flex justify-between items-center">
+            <span>9:41</span>
+            <div class="flex items-center space-x-1">
+                <i class="fas fa-signal text-xs"></i>
+                <i class="fas fa-wifi text-xs"></i>
+                <i class="fas fa-battery-three-quarters text-xs"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Header -->
+        <!-- @COMPONENT: NavigationHeader -->
+        <header class="bg-white/90 ios-blur border-b border-gray-200 px-4 py-3">
+            <div class="flex items-center justify-between">
+                <button class="p-2 text-norse-blue" data-event="click:navigateBack">
+                    <i class="fas fa-chevron-left text-lg"></i>
+                </button>
+                <h1 class="text-xl font-bold text-norse-blue">Hnefatafl</h1>
+                <button class="p-2 text-norse-blue" data-event="click:showSettings">
+                    <i class="fas fa-cog text-lg"></i>
+                </button>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: NavigationHeader -->
+
+        <!-- Main Content Container -->
+        <main class="px-4 py-6 space-y-6">
+            
+            <!-- Game Status Card -->
+            <!-- @COMPONENT: GameStatusCard -->
+            <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <!-- Current player avatar -->
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-viking-amber to-orange-600 flex items-center justify-center">
+                            <span class="text-white font-bold text-lg" data-bind="currentPlayer.initial">A</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900" data-bind="currentPlayer.name">Alex the Bold</p>
+                            <p class="text-sm text-gray-500">Your Turn</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-norse-blue" data-bind="gameTime">12:34</p>
+                        <p class="text-xs text-gray-500">Game Time</p>
+                    </div>
+                </div>
+                
+                <!-- Turn Indicator -->
+                <div class="flex items-center justify-center p-3 bg-gradient-to-r from-viking-amber to-orange-500 rounded-xl">
+                    <i class="fas fa-crown text-white mr-2"></i>
+                    <span class="text-white font-semibold">Attackers Turn</span>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: GameStatusCard -->
+
+            <!-- Game Board -->
+            <!-- @COMPONENT: GameBoard -->
+            <div class="bg-aged-wood rounded-2xl p-4 shadow-2xl border-4 border-bronze">
+                <div class="grid grid-cols-11 gap-1 aspect-square bg-wood-dark rounded-xl p-2" data-implementation="11x11 Hnefatafl board with authentic piece placement">
+                    
+                    <!-- @MAP: boardState.map((row, rowIndex) => row.map((cell, colIndex) => ( -->
+                    <!-- Row 0 - Top attackers -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="0,3" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="0,4" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="0,5" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="0,6" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="0,7" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="0,10"></div>
+
+                    <!-- Row 1 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="1,5" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="1,10"></div>
+
+                    <!-- Row 2 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,5"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="2,10"></div>
+
+                    <!-- Row 3 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="3,0" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="3,4" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="3,5" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="3,6" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="3,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="3,10" data-piece="attacker"></div>
+
+                    <!-- Row 4 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="4,0" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="4,3" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="4,5" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="4,7" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="4,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="4,10" data-piece="attacker"></div>
+
+                    <!-- Row 5 - Center row with King -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="5,0" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="5,1" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="5,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="5,3" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="5,4" data-piece="defender"></div>
+                    <!-- Throne square with King -->
+                    <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 border-2 border-yellow-700 rounded-sm aspect-square relative piece-king selected-piece" data-position="5,5" data-piece="king" data-special="throne">
+                        <div class="absolute inset-1 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-sm opacity-30"></div>
+                    </div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="5,6" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="5,7" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="5,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="5,9" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="5,10" data-piece="attacker"></div>
+
+                    <!-- Row 6 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="6,0" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="6,3" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="6,5" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="6,7" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="6,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="6,10" data-piece="attacker"></div>
+
+                    <!-- Row 7 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="7,0" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="7,4" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="7,5" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-defender" data-position="7,6" data-piece="defender"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="7,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="7,10" data-piece="attacker"></div>
+
+                    <!-- Row 8 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,5"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="8,10"></div>
+
+                    <!-- Row 9 -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,3"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,4"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="9,5" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,6"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,7"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="9,10"></div>
+
+                    <!-- Row 10 - Bottom attackers -->
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,0"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,1"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,2"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="10,3" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="10,4" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="10,5" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="10,6" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors piece-attacker" data-position="10,7" data-piece="attacker"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,8"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,9"></div>
+                    <div class="bg-aged-wood border border-wood-dark rounded-sm aspect-square relative hover:bg-yellow-100 transition-colors" data-position="10,10"></div>
+                    <!-- @END_MAP )) -->
+                </div>
+
+                <!-- Valid moves indicator -->
+                <div class="mt-3 flex items-center justify-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-gray-600">Valid Move</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-viking-amber rounded-full"></div>
+                        <span class="text-xs text-gray-600">Selected</span>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: GameBoard -->
+
+            <!-- Game Controls -->
+            <!-- @COMPONENT: GameControls -->
+            <div class="flex space-x-3">
+                <button class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors" data-event="click:resignGame">
+                    <i class="fas fa-flag mr-2"></i>
+                    Resign
+                </button>
+                <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors" data-event="click:offerDraw">
+                    <i class="fas fa-handshake mr-2"></i>
+                    Draw
+                </button>
+                <button class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors" data-event="click:showGameMenu">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+            <!-- @END_COMPONENT: GameControls -->
+
+            <!-- Multiplayer Chat -->
+            <!-- @COMPONENT: MultiplayerChat -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-norse-blue text-white px-4 py-3 flex items-center justify-between">
+                    <h3 class="font-semibold">Game Chat</h3>
+                    <button class="text-white/70 hover:text-white" data-event="click:toggleChat">
+                        <i class="fas fa-chevron-up text-sm"></i>
+                    </button>
+                </div>
+                
+                <div class="p-4 space-y-3 max-h-40 overflow-y-auto" data-implementation="Scrollable chat container">
+                    <!-- @MAP: chatMessages.map(message => ( -->
+                    <div class="flex items-start space-x-3" data-mock="true">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">R</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-500" data-bind="message.author">Ragnar the Red</p>
+                            <p class="text-sm text-gray-900" data-bind="message.content">Good luck! May the gods favor the worthy.</p>
+                        </div>
+                        <span class="text-xs text-gray-400" data-bind="message.timestamp">2m</span>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3" data-mock="true">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-viking-amber to-orange-600 flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">A</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-500" data-bind="message.author">Alex the Bold</p>
+                            <p class="text-sm text-gray-900" data-bind="message.content">Thanks! This is going to be intense 🔥</p>
+                        </div>
+                        <span class="text-xs text-gray-400" data-bind="message.timestamp">1m</span>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+                
+                <div class="border-t border-gray-100 p-3">
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Type a message..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-norse-blue focus:border-transparent text-sm" data-bind="chatInput" data-event="keypress:sendMessage">
+                        <button class="bg-norse-blue hover:bg-blue-700 text-white p-2 rounded-lg transition-colors" data-event="click:sendMessage">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: MultiplayerChat -->
+
+            <!-- Quick Actions -->
+            <!-- @COMPONENT: QuickActions -->
+            <div class="grid grid-cols-2 gap-3">
+                <button class="bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors" data-event="click:showRules">
+                    <i class="fas fa-book text-norse-blue text-xl mb-2"></i>
+                    <p class="text-sm font-semibold text-gray-900">Game Rules</p>
+                    <p class="text-xs text-gray-500">Learn Hnefatafl</p>
+                </button>
+                
+                <button class="bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors" data-event="click:viewHistory">
+                    <i class="fas fa-history text-norse-blue text-xl mb-2"></i>
+                    <p class="text-sm font-semibold text-gray-900">Move History</p>
+                    <p class="text-xs text-gray-500">Review moves</p>
+                </button>
+            </div>
+            <!-- @END_COMPONENT: QuickActions -->
+        </main>
+
+        <!-- Bottom Safe Area -->
+        <div class="h-8 bg-gradient-to-t from-slate-200 to-transparent"></div>
+
+        <!-- Modal Overlays (Hidden by default) -->
+        
+        <!-- Game Menu Modal -->
+        <!-- @COMPONENT: GameMenuModal [hidden] -->
+        <div class="fixed inset-0 bg-black/50 ios-blur hidden z-50" data-modal="gameMenu">
+            <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 pb-8">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                
+                <div class="space-y-4">
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors" data-event="click:saveGame">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-save text-norse-blue"></i>
+                            <span class="font-semibold">Save Game</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors" data-event="click:showSettings">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-cog text-norse-blue"></i>
+                            <span class="font-semibold">Settings</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-red-50 rounded-xl hover:bg-red-100 transition-colors" data-event="click:leaveGame">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-sign-out-alt text-red-500"></i>
+                            <span class="font-semibold text-red-500">Leave Game</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-red-400"></i>
+                    </button>
+                </div>
+                
+                <button class="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-colors" data-event="click:closeModal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: GameMenuModal -->
+
+        <!-- Victory Modal -->
+        <!-- @COMPONENT: VictoryModal [hidden] -->
+        <div class="fixed inset-0 bg-black/50 ios-blur hidden z-50 flex items-center justify-center p-4" data-modal="victory">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-auto text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-crown text-white text-2xl"></i>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Victory!</h2>
+                <p class="text-gray-600 mb-6" data-bind="victoryMessage">The King has escaped to freedom!</p>
+                
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">Game Duration</span>
+                        <span class="font-semibold" data-bind="gameDuration">18:42</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Total Moves</span>
+                        <span class="font-semibold" data-bind="totalMoves">47</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button class="w-full bg-norse-blue hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors" data-event="click:playAgain">
+                        Play Again
+                    </button>
+                    <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-colors" data-event="click:returnToLobby">
+                        Return to Lobby
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: VictoryModal -->
+        
+    </div>
+    <!-- @END_COMPONENT: AppContainer -->
+
+    <!-- JavaScript for Interactive Features -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // Game state management
+        const gameState = {
+            selectedPiece: null,
+            validMoves: [],
+            currentPlayer: 'attacker',
+            gameStatus: 'active'
+        };
+
+        // Piece selection and movement
+        function handlePieceClick(element) {
+            const pieces = document.querySelectorAll('[data-piece]');
+            const validMoveSquares = document.querySelectorAll('.valid-move');
+            
+            // Clear previous selections
+            pieces.forEach(p => p.classList.remove('selected-piece'));
+            validMoveSquares.forEach(s => s.classList.remove('valid-move'));
+            
+            if (gameState.selectedPiece === element) {
+                gameState.selectedPiece = null;
+                return;
+            }
+            
+            // Select new piece
+            gameState.selectedPiece = element;
+            element.classList.add('selected-piece');
+            
+            // Show valid moves (mock implementation)
+            showValidMoves(element);
+        }
+        
+        function showValidMoves(pieceElement) {
+            const position = pieceElement.getAttribute('data-position');
+            const [row, col] = position.split(',').map(Number);
+            
+            // Mock valid moves - in real implementation, this would check game rules
+            const mockValidMoves = [
+                [row-1, col], [row+1, col], [row, col-1], [row, col+1]
+            ].filter(([r, c]) => r >= 0 && r < 11 && c >= 0 && c < 11);
+            
+            mockValidMoves.forEach(([r, c]) => {
+                const square = document.querySelector(`[data-position="${r},${c}"]`);
+                if (square && !square.hasAttribute('data-piece')) {
+                    square.classList.add('valid-move');
+                }
+            });
+        }
+        
+        // Event listeners
+        document.addEventListener('click', function(e) {
+            const piece = e.target.closest('[data-piece]');
+            const square = e.target.closest('[data-position]');
+            
+            if (piece) {
+                handlePieceClick(piece);
+            } else if (square && square.classList.contains('valid-move')) {
+                // Handle move
+                if (gameState.selectedPiece) {
+                    movePiece(gameState.selectedPiece, square);
+                }
+            }
+        });
+        
+        function movePiece(fromElement, toElement) {
+            // Animate piece movement
+            fromElement.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                // Move piece classes
+                toElement.className = fromElement.className;
+                toElement.setAttribute('data-piece', fromElement.getAttribute('data-piece'));
+                
+                // Clear original position
+                fromElement.removeAttribute('data-piece');
+                fromElement.className = fromElement.className.replace(/piece-\w+/g, '');
+                fromElement.classList.remove('selected-piece');
+                
+                // Clear valid moves
+                document.querySelectorAll('.valid-move').forEach(s => s.classList.remove('valid-move'));
+                
+                gameState.selectedPiece = null;
+                
+                // Switch turns
+                gameState.currentPlayer = gameState.currentPlayer === 'attacker' ? 'defender' : 'attacker';
+                updateGameStatus();
+            }, 150);
+        }
+        
+        function updateGameStatus() {
+            const statusElement = document.querySelector('.bg-gradient-to-r span');
+            if (statusElement) {
+                statusElement.textContent = gameState.currentPlayer === 'attacker' ? 'Attackers Turn' : 'Defenders Turn';
+            }
+        }
+        
+        // Modal handling
+        function showModal(modalId) {
+            const modal = document.querySelector(`[data-modal="${modalId}"]`);
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+        
+        function hideModal(modalId) {
+            const modal = document.querySelector(`[data-modal="${modalId}"]`);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+        
+        // Chat functionality
+        function sendChatMessage() {
+            const input = document.querySelector('[data-bind="chatInput"]');
+            if (input && input.value.trim()) {
+                // Mock message sending - in real app would use Firebase
+                console.log('Sending message:', input.value);
+                input.value = '';
+            }
+        }
+        
+        // Button event handlers
+        document.addEventListener('click', function(e) {
+            const button = e.target.closest('button');
+            if (!button) return;
+            
+            const event = button.getAttribute('data-event');
+            if (!event) return;
+            
+            const [eventType, handler] = event.split(':');
+            
+            switch (handler) {
+                case 'showGameMenu':
+                    showModal('gameMenu');
+                    break;
+                case 'closeModal':
+                    document.querySelectorAll('[data-modal]').forEach(modal => {
+                        modal.classList.add('hidden');
+                    });
+                    break;
+                case 'sendMessage':
+                    sendChatMessage();
+                    break;
+                case 'resignGame':
+                    if (confirm('Are you sure you want to resign?')) {
+                        showModal('victory');
+                    }
+                    break;
+                case 'playAgain':
+                    hideModal('victory');
+                    location.reload(); // Mock game restart
+                    break;
+                default:
+                    console.log('Button clicked:', handler);
+            }
+        });
+        
+        // Enter key for chat
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.matches('[data-bind="chatInput"]')) {
+                sendChatMessage();
+            }
+        });
+        
+        // Initialize game
+        console.log('Hnefatafl game initialized');
+        
+    })();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viking Chess (Hnefatafl) - iOS Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'viking-brown': '#8B4513',
+                    'stone-gray': '#2F4F4F',
+                    'gold-accent': '#DAA520',
+                    'ios-dark': '#1C1C1E',
+                    'ios-light': '#F2F2F7',
+                    'ios-blue': '#007AFF',
+                    'ios-green': '#34C759',
+                    'ios-orange': '#FF9500',
+                    'ios-red': '#FF3B30'
+                },
+                fontFamily: {
+                    'sf-pro': ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Helvetica Neue', 'sans-serif']
+                },
+                spacing: {
+                    '18': '4.5rem',
+                    '88': '22rem'
+                }
+            }
+        }
+    };
+    </script>
+    <style>
+        .board-cell {
+            aspect-ratio: 1;
+            transition: all 0.2s ease;
+        }
+        .board-cell:hover {
+            transform: scale(1.02);
+        }
+        .piece {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+        .piece:active {
+            transform: scale(1.1);
+            z-index: 50;
+        }
+        .valid-move {
+            animation: pulse 1.5s infinite;
+        }
+        .game-card {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="font-sf-pro bg-gradient-to-br from-stone-gray to-viking-brown min-h-screen">
+    
+    <!-- @COMPONENT: GameContainer [main app container] -->
+    <div class="max-w-6xl mx-auto min-h-screen">
+        
+        <!-- Header Navigation -->
+        <!-- @COMPONENT: AppHeader [navigation and user info] -->
+        <header class="bg-white/90 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-40">
+            <div class="px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-gold-accent to-viking-brown rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chess-king text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Viking Chess</h1>
+                        <p class="text-sm text-gray-600">Hnefatafl</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <!-- @STATE: userProfile:object, isOnline:boolean -->
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-ios-green rounded-full" data-bind="connectionStatus"></div>
+                        <span class="text-sm text-gray-600" data-mock="true">Online</span>
+                    </div>
+                    <!-- Profile image placeholder for logged in user -->
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-semibold" data-bind="user.initials" data-mock="true">JD</span>
+                    </div>
+                    <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors" data-event="click:openSettings">
+                        <i class="fas fa-cog text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: AppHeader -->
+
+        <!-- Main Game Layout -->
+        <div class="flex flex-col lg:flex-row gap-6 p-4">
+            
+            <!-- Game Board Section -->
+            <!-- @COMPONENT: GameBoard [main game interface] -->
+            <div class="flex-1 max-w-3xl mx-auto lg:mx-0">
+                <div class="bg-white/95 backdrop-blur-lg rounded-3xl p-6 ios-shadow">
+                    
+                    <!-- Game Status Bar -->
+                    <div class="mb-6 bg-gradient-to-r from-viking-brown/10 to-gold-accent/10 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <!-- @STATE: currentPlayer:string, gameStatus:string -->
+                                <div class="w-3 h-3 bg-ios-green rounded-full animate-pulse"></div>
+                                <span class="font-semibold text-gray-900" data-bind="gameStatus" data-mock="true">Defenders' Turn</span>
+                            </div>
+                            <div class="text-sm text-gray-600 bg-white/80 px-3 py-1 rounded-full">
+                                <i class="fas fa-clock mr-1"></i>
+                                <span data-bind="turnTimer" data-mock="true">2:34</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Player Information -->
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <!-- Defender (current player) -->
+                                <div class="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-xl border-2 border-ios-blue">
+                                    <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-shield text-white text-xs"></i>
+                                    </div>
+                                    <span class="font-medium text-blue-900" data-bind="defender.name" data-mock="true">Erik the Bold</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 uppercase tracking-wide">Move</div>
+                                <div class="font-bold text-xl text-gray-900" data-bind="moveCount" data-mock="true">23</div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <!-- Attacker -->
+                                <div class="flex items-center space-x-2 bg-red-50 px-3 py-2 rounded-xl">
+                                    <span class="font-medium text-red-900" data-bind="attacker.name" data-mock="true">Ragnar Iron</span>
+                                    <div class="w-6 h-6 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-sword text-white text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 11x11 Hnefatafl Board -->
+                    <!-- @FUNCTIONALITY: Interactive game board with drag-and-drop piece movement -->
+                    <div class="bg-gradient-to-br from-amber-100 to-amber-200 p-4 rounded-2xl shadow-inner">
+                        <div class="grid grid-cols-11 gap-1 max-w-lg mx-auto" data-implementation="React component for board state management">
+                            
+                            <!-- @MAP: board.map((row, rowIndex) => row.map((cell, colIndex) => ( -->
+                            <!-- Row 0 -->
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative" data-position="0,0">
+                                <div class="absolute inset-0 bg-red-200/50 rounded-lg"></div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <!-- Attacker piece -->
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker" data-event="click:selectPiece">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="absolute inset-0 bg-red-200/50 rounded-lg"></div>
+                            </div>
+
+                            <!-- Additional rows with similar structure... showing key pieces -->
+                            <!-- Row 1-4: Building toward center with attackers and defenders -->
+                            <!-- Simplified representation showing key positions -->
+                            
+                            <!-- Center area with King and Defenders -->
+                            <!-- Row 5 (center) -->
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <!-- King in center -->
+                            <div class="board-cell bg-gradient-to-br from-gold-accent to-yellow-600 border-2 border-gold-accent rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-10 h-10 bg-gradient-to-br from-gold-accent to-yellow-600 rounded-full shadow-xl cursor-pointer flex items-center justify-center border-2 border-yellow-300" data-piece-type="king" data-event="click:selectPiece">
+                                    <i class="fas fa-crown text-white"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="defender">
+                                    <i class="fas fa-shield text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="piece w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg cursor-pointer flex items-center justify-center" data-piece-type="attacker">
+                                    <i class="fas fa-sword text-white text-xs"></i>
+                                </div>
+                            </div>
+
+                            <!-- Continue pattern for remaining rows... -->
+                            <!-- Additional cells to complete 11x11 grid -->
+                            <!-- Sample additional cells showing the pattern -->
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center relative">
+                                <div class="w-3 h-3 bg-ios-green rounded-full valid-move opacity-60" data-mock="true"></div>
+                            </div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            <div class="board-cell bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-center"></div>
+                            
+                            <!-- Continue this pattern to complete all 121 cells (11x11) -->
+                            <!-- For brevity, showing representative cells that demonstrate the game state -->
+                            
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+
+                    <!-- Game Controls -->
+                    <div class="mt-6 flex justify-between items-center">
+                        <div class="flex space-x-3">
+                            <button class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors" data-event="click:undoMove">
+                                <i class="fas fa-undo text-gray-600"></i>
+                                <span class="text-gray-700 font-medium">Undo</span>
+                            </button>
+                            <button class="bg-red-100 hover:bg-red-200 px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors" data-event="click:resignGame">
+                                <i class="fas fa-flag text-red-600"></i>
+                                <span class="text-red-700 font-medium">Resign</span>
+                            </button>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button class="bg-ios-blue hover:bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors" data-event="click:offerDraw">
+                                <i class="fas fa-handshake"></i>
+                                <span class="font-medium">Offer Draw</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: GameBoard -->
+
+            <!-- Right Sidebar -->
+            <div class="lg:w-80 space-y-6">
+                
+                <!-- Multiplayer Lobby -->
+                <!-- @COMPONENT: MultiplayerLobby [game matching and lobby] -->
+                <div class="bg-white/95 backdrop-blur-lg rounded-2xl p-6 ios-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-900">Game Lobby</h3>
+                        <div class="flex items-center space-x-2 text-sm text-ios-green">
+                            <div class="w-2 h-2 bg-ios-green rounded-full animate-pulse"></div>
+                            <span data-bind="onlinePlayerCount" data-mock="true">247 online</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Match -->
+                    <div class="space-y-3 mb-6">
+                        <button class="w-full bg-gradient-to-r from-ios-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105" data-event="click:quickMatch">
+                            <i class="fas fa-lightning-bolt mr-2"></i>
+                            Quick Match
+                        </button>
+                        <button class="w-full bg-gradient-to-r from-ios-green to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105" data-event="click:createGame">
+                            <i class="fas fa-plus mr-2"></i>
+                            Create Game
+                        </button>
+                    </div>
+
+                    <!-- Active Games List -->
+                    <div class="space-y-3">
+                        <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Available Games</h4>
+                        
+                        <!-- @MAP: availableGames.map(game => ( -->
+                        <div class="game-card bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-200" data-event="click:joinGame" data-game-id="game1">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold" data-bind="host.initial" data-mock="true">M</span>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-bind="host.name" data-mock="true">Magnus Viking</span>
+                                </div>
+                                <div class="text-xs bg-ios-green text-white px-2 py-1 rounded-full">
+                                    <span data-bind="game.status" data-mock="true">Waiting</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span data-bind="game.timeControl" data-mock="true">10+5 min</span>
+                                <span data-bind="game.rating" data-mock="true">1420 ELO</span>
+                            </div>
+                        </div>
+
+                        <div class="game-card bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-200" data-event="click:joinGame" data-game-id="game2">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold" data-mock="true">L</span>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-mock="true">Loki Trickster</span>
+                                </div>
+                                <div class="text-xs bg-ios-green text-white px-2 py-1 rounded-full">
+                                    <span data-mock="true">Waiting</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span data-mock="true">15+10 min</span>
+                                <span data-mock="true">1650 ELO</span>
+                            </div>
+                        </div>
+
+                        <div class="game-card bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-200" data-event="click:joinGame" data-game-id="game3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-gradient-to-br from-orange-500 to-orange-700 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold" data-mock="true">F</span>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-mock="true">Freya Shield</span>
+                                </div>
+                                <div class="text-xs bg-ios-green text-white px-2 py-1 rounded-full">
+                                    <span data-mock="true">Waiting</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span data-mock="true">5+3 min</span>
+                                <span data-mock="true">1580 ELO</span>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: MultiplayerLobby -->
+
+                <!-- Chat System -->
+                <!-- @COMPONENT: GameChat [real-time messaging] -->
+                <div class="bg-white/95 backdrop-blur-lg rounded-2xl p-6 ios-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-900">Game Chat</h3>
+                        <button class="text-gray-500 hover:text-gray-700" data-event="click:toggleChat">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div class="space-y-3 mb-4 max-h-48 overflow-y-auto" data-implementation="Scrollable chat container">
+                        <!-- @MAP: chatMessages.map(message => ( -->
+                        <div class="flex items-start space-x-2">
+                            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-xs font-bold" data-bind="message.sender.initial" data-mock="true">E</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-gray-100 rounded-2xl px-3 py-2">
+                                    <p class="text-sm text-gray-800" data-bind="message.text" data-mock="true">Good game! May the best Viking win 🛡️</p>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1" data-bind="message.timestamp" data-mock="true">2 min ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-2">
+                            <div class="w-6 h-6 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-xs font-bold" data-mock="true">R</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-red-50 border border-red-200 rounded-2xl px-3 py-2">
+                                    <p class="text-sm text-red-800" data-mock="true">Your king will fall! ⚔️</p>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1" data-mock="true">1 min ago</p>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Type a message..." class="flex-1 px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl focus:ring-2 focus:ring-ios-blue focus:border-transparent outline-none" data-event="keypress:sendMessage" data-mock="true">
+                        <button class="bg-ios-blue hover:bg-blue-600 text-white p-2 rounded-xl transition-colors" data-event="click:sendMessage">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: GameChat -->
+
+                <!-- Game Statistics -->
+                <!-- @COMPONENT: GameStats [player statistics and game info] -->
+                <div class="bg-white/95 backdrop-blur-lg rounded-2xl p-6 ios-shadow">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Game Statistics</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Piece Count -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 rounded-xl p-3 text-center">
+                                <div class="text-2xl font-bold text-blue-600" data-bind="defenderCount" data-mock="true">8</div>
+                                <div class="text-sm text-blue-800">Defenders</div>
+                                <div class="flex items-center justify-center mt-1">
+                                    <i class="fas fa-shield text-blue-600 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="bg-red-50 rounded-xl p-3 text-center">
+                                <div class="text-2xl font-bold text-red-600" data-bind="attackerCount" data-mock="true">18</div>
+                                <div class="text-sm text-red-800">Attackers</div>
+                                <div class="flex items-center justify-center mt-1">
+                                    <i class="fas fa-sword text-red-600 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Move History -->
+                        <div>
+                            <h4 class="font-semibold text-gray-700 text-sm mb-2">Recent Moves</h4>
+                            <div class="space-y-1 text-sm">
+                                <!-- @MAP: recentMoves.map(move => ( -->
+                                <div class="flex justify-between text-gray-600" data-bind="move" data-mock="true">
+                                    <span>23. Def: E5→F5</span>
+                                    <span>2:34</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600" data-mock="true">
+                                    <span>22. Att: A4→B4</span>
+                                    <span>1:12</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600" data-mock="true">
+                                    <span>21. Def: D6→D5</span>
+                                    <span>0:45</span>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- Game Rules Quick Reference -->
+                        <div class="bg-gradient-to-br from-gold-accent/20 to-amber-200/40 rounded-xl p-3">
+                            <h4 class="font-semibold text-amber-800 text-sm mb-2">Victory Conditions</h4>
+                            <ul class="text-xs text-amber-700 space-y-1">
+                                <li data-mock="true">🛡️ Defenders: Get King to edge</li>
+                                <li data-mock="true">⚔️ Attackers: Capture the King</li>
+                                <li data-mock="true">👑 King escapes from any edge square</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: GameStats -->
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: GameContainer -->
+
+    <!-- Game Modal Overlays -->
+    <!-- @COMPONENT: GameModals [victory, settings, etc.] -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden" id="gameModal" data-implementation="Modal overlay system">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-auto slide-up ios-shadow">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-gold-accent to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-crown text-white text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2" data-bind="modal.title" data-mock="true">Victory!</h2>
+                    <p class="text-gray-600 mb-6" data-bind="modal.message" data-mock="true">The King has escaped! Defenders win this battle.</p>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full bg-gradient-to-r from-ios-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200" data-event="click:playAgain">
+                            Play Again
+                        </button>
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-colors" data-event="click:backToLobby">
+                            Back to Lobby
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: GameModals -->
+
+    <script>
+    (function() {
+        // Game state management
+        let gameState = {
+            currentPlayer: 'defender',
+            selectedPiece: null,
+            validMoves: [],
+            board: Array(11).fill().map(() => Array(11).fill(null)),
+            gameStatus: 'active'
+        };
+
+        // Piece selection and movement
+        function selectPiece(piece) {
+            // Clear previous selection
+            document.querySelectorAll('.piece').forEach(p => {
+                p.classList.remove('ring-4', 'ring-ios-blue');
+            });
+            
+            // Highlight selected piece
+            piece.classList.add('ring-4', 'ring-ios-blue');
+            gameState.selectedPiece = piece;
+            
+            // Show valid moves
+            showValidMoves(piece);
+        }
+
+        function showValidMoves(piece) {
+            // Clear previous valid move indicators
+            document.querySelectorAll('.valid-move').forEach(indicator => {
+                indicator.remove();
+            });
+            
+            // Add valid move indicators (simplified logic)
+            const cells = document.querySelectorAll('.board-cell');
+            // In a real implementation, this would calculate valid moves based on piece type and position
+            // For demo purposes, showing a few sample valid moves
+            if (cells.length > 50) {
+                const sampleValidCells = [12, 23, 34, 45];
+                sampleValidCells.forEach(index => {
+                    if (cells[index] && !cells[index].querySelector('.piece')) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'w-3 h-3 bg-ios-green rounded-full valid-move opacity-60 absolute';
+                        indicator.style.top = '50%';
+                        indicator.style.left = '50%';
+                        indicator.style.transform = 'translate(-50%, -50%)';
+                        cells[index].appendChild(indicator);
+                    }
+                });
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('click', function(e) {
+            // Piece selection
+            if (e.target.closest('.piece')) {
+                const piece = e.target.closest('.piece');
+                selectPiece(piece);
+            }
+            
+            // Board cell clicks for movement
+            if (e.target.closest('.board-cell') && gameState.selectedPiece) {
+                const cell = e.target.closest('.board-cell');
+                if (cell.querySelector('.valid-move')) {
+                    // Move piece (simplified)
+                    movePiece(gameState.selectedPiece, cell);
+                }
+            }
+        });
+
+        function movePiece(piece, targetCell) {
+            // Remove piece from current position
+            piece.remove();
+            
+            // Add piece to new position
+            targetCell.appendChild(piece);
+            
+            // Clear selection and valid moves
+            piece.classList.remove('ring-4', 'ring-ios-blue');
+            document.querySelectorAll('.valid-move').forEach(indicator => {
+                indicator.remove();
+            });
+            
+            // Switch turns
+            gameState.currentPlayer = gameState.currentPlayer === 'defender' ? 'attacker' : 'defender';
+            updateGameStatus();
+            
+            gameState.selectedPiece = null;
+        }
+
+        function updateGameStatus() {
+            const statusElement = document.querySelector('[data-bind="gameStatus"]');
+            if (statusElement) {
+                statusElement.textContent = gameState.currentPlayer === 'defender' ? "Defenders' Turn" : "Attackers' Turn";
+            }
+        }
+
+        // Multiplayer lobby interactions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('[data-event="click:quickMatch"]')) {
+                // Simulate finding a match
+                setTimeout(() => {
+                    alert('Match found! Starting game...');
+                }, 1000);
+            }
+            
+            if (e.target.closest('[data-event="click:createGame"]')) {
+                alert('Game created! Waiting for opponent...');
+            }
+            
+            if (e.target.closest('[data-event="click:joinGame"]')) {
+                alert('Joining game...');
+            }
+        });
+
+        // Chat functionality
+        const chatInput = document.querySelector('input[placeholder="Type a message..."]');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && this.value.trim()) {
+                    // In a real app, this would send the message via WebSocket/Firebase
+                    console.log('Sending message:', this.value);
+                    this.value = '';
+                }
+            });
+        }
+
+        // Initialize game
+        console.log('Viking Chess game initialized');
+    })();
+    </script>
+</body>
+</html>

@@ -301,10 +301,10 @@ export default function GamePage() {
   function checkCaptures(position: Position, boardState: BoardState): Position[] {
     const captures: Position[] = []
     const directions = [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
+      [-1, 0], // North
+      [1, 0], // South
+      [0, -1], // West
+      [0, 1], // East
     ]
     const currentPiece = boardState[position.row][position.col]
 
@@ -322,33 +322,32 @@ export default function GamePage() {
       // Can't capture empty squares or same team pieces
       if (!adjacentPiece || !isEnemyPiece(adjacentPiece, currentPiece)) continue
 
-      // Special rules for capturing the king - skip for now, handle in win condition
+      // Special rules for capturing the king - handle separately
       if (adjacentPiece === 'king') {
+        // King capture requires special conditions (all 4 sides surrounded)
         continue
       }
 
-      // Regular piece capture rules
+      // Check if we can capture this adjacent enemy piece
       let canCapture = false
 
-      // Check if opposite square is out of bounds (wall capture)
+      // Check if opposite square creates a capture condition
       if (oppositeRow < 0 || oppositeRow >= 11 || oppositeCol < 0 || oppositeCol >= 11) {
-        // Wall capture - piece is trapped against board edge by any piece
-        canCapture = true
+        // Board edge - NO automatic capture in standard Hnefatafl
+        // Pieces are NOT captured just by being against the edge
+        canCapture = false
       } else {
         const oppositePiece = boardState[oppositeRow][oppositeCol]
 
-        // Standard sandwich capture - piece must be between two hostile squares
+        // Standard sandwich capture rules
         if (oppositePiece === currentPiece) {
-          // Captured by friendly piece on opposite side
+          // Captured between two friendly pieces (active capture)
           canCapture = true
         } else if (isSpecialSquare(oppositeRow, oppositeCol)) {
-          // Captured against throne or corner (acts as hostile square)
+          // Captured against "X" space (corner only) - counts for either side
           canCapture = true
-        } else if (oppositePiece && isEnemyPiece(oppositePiece, adjacentPiece)) {
-          // Some variants allow capture between two enemy pieces
-          // For standard rules, this should be false
-          canCapture = false
         }
+        // Note: No capture if opposite square is empty or has enemy piece
       }
 
       if (canCapture) {
@@ -360,10 +359,8 @@ export default function GamePage() {
   }
 
   function isSpecialSquare(row: number, col: number): boolean {
-    // Throne square (center)
-    if (row === 5 && col === 5) return true
-
-    // Corner squares
+    // Only corner squares are "X" squares for captures
+    // Throne is NOT an X square - it's special only for king movement/capture
     if (isCorner(row, col)) return true
 
     return false
@@ -1174,16 +1171,16 @@ export default function GamePage() {
                         like rooks in chess
                       </li>
                       <li className="flex items-center">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Capture by
-                        sandwiching enemies
+                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Actively
+                        surround enemies to capture
                       </li>
                       <li className="flex items-center">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Wall
-                        captures: trap pieces against board edge
+                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Corners help
+                        with captures
                       </li>
                       <li className="flex items-center">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Throne &
-                        corners act as hostile squares
+                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>No capture if
+                        you move into danger
                       </li>
                     </ul>
                   </div>
@@ -1199,21 +1196,26 @@ export default function GamePage() {
                       <li className="flex items-start">
                         <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
                         <span>
-                          <strong>Sandwich:</strong> Trap enemy between two of your pieces
+                          <strong>Active Capture:</strong> Must actively surround enemy piece
                         </span>
                       </li>
                       <li className="flex items-start">
                         <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
                         <span>
-                          <strong>Wall Capture:</strong> Any piece can be captured against board
-                          edge
+                          <strong>Sandwich:</strong> Trap enemy between two friendly pieces
                         </span>
                       </li>
                       <li className="flex items-start">
                         <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
                         <span>
-                          <strong>Special Squares:</strong> Throne & corners count as hostile
-                          squares
+                          <strong>"X" Squares:</strong> Only corners count as hostile for either
+                          side
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
+                        <span>
+                          <strong>No Suicide:</strong> Moving into sandwich doesn't cause capture
                         </span>
                       </li>
                       <li className="flex items-start">

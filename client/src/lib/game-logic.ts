@@ -88,21 +88,23 @@ export function calculateCaptures(board: BoardState, position: Position): Positi
 
     let canCapture = false
 
-    // Check if opposite square is out of bounds (wall capture)
+    // Check opposite square for capture conditions
     if (oppositeRow < 0 || oppositeRow >= 11 || oppositeCol < 0 || oppositeCol >= 11) {
-      // Wall capture - piece is trapped against board edge
-      canCapture = true
+      // Board edge - NO automatic capture in standard rules
+      // Must actively surround, not just push against edge
+      canCapture = false
     } else {
       const oppositePiece = board[oppositeRow][oppositeCol]
 
-      // Standard sandwich capture
+      // Active capture rules - must surround with hostile squares
       if (oppositePiece === piece) {
-        // Captured by friendly piece on opposite side
+        // Captured between two friendly pieces (active surrounding)
         canCapture = true
       } else if (isSpecialSquare(oppositeRow, oppositeCol)) {
-        // Captured against throne or corner (acts as hostile square)
+        // Captured against "X" space (corner only) - counts for either side
         canCapture = true
       }
+      // No capture if opposite is empty or enemy piece
     }
 
     if (canCapture) {
@@ -114,10 +116,8 @@ export function calculateCaptures(board: BoardState, position: Position): Positi
 }
 
 function isSpecialSquare(row: number, col: number): boolean {
-  // Throne square
-  if (row === 5 && col === 5) return true
-
-  // Corner squares
+  // Only corner squares are "X" squares for captures
+  // Throne is NOT an X square - it's special only for king movement/capture
   if (
     (row === 0 && col === 0) ||
     (row === 0 && col === 10) ||

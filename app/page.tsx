@@ -9,7 +9,7 @@ export default function HomePage() {
           Advanced Hnefatafl (Viking Chess) with AI opponents, tournaments, and multiplayer battles
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">🤖 Play vs AI</h2>
             <p className="text-gray-600 mb-4">
@@ -34,6 +34,19 @@ export default function HomePage() {
               className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
               Join Lobby
+            </Link>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">🎯 Practice Game</h2>
+            <p className="text-gray-600 mb-4">
+              Play a local game to learn the rules and practice your strategy.
+            </p>
+            <Link
+              href="/game"
+              className="inline-block bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              Start Practice
             </Link>
           </div>
 

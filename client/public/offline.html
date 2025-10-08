@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viking Chess - Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: #facc15;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #1e293b;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .features h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #facc15;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "⚔️";
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #facc15;
+            color: #1e293b;
+        }
+
+        .btn-primary:hover {
+            background: #eab308;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status.online {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .icon {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
+            }
+            
+            .features {
+                padding: 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚔️</div>
+        
+        <h1>You're Offline</h1>
+        <p>No internet connection detected, but you can still enjoy Viking Chess!</p>
+        
+        <div class="features">
+            <h2>Available Offline Features</h2>
+            <ul class="feature-list">
+                <li>Play against AI opponents</li>
+                <li>Multiple difficulty levels</li>
+                <li>Different AI personalities</li>
+                <li>Game history and statistics</li>
+                <li>Practice and improve your skills</li>
+            </ul>
+        </div>
+        
+        <div class="buttons">
+            <a href="/" class="btn btn-primary" onclick="goHome()">
+                🏠 Go to Home
+            </a>
+            <button class="btn btn-secondary" onclick="checkConnection()">
+                🔄 Check Connection
+            </button>
+        </div>
+        
+        <div class="status" id="status">
+            📡 You're currently offline. Some features may be limited.
+        </div>
+    </div>
+
+    <script>
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        function checkConnection() {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '🔄 Checking connection...';
+            
+            // Try to fetch a small resource to test connectivity
+            fetch('/', { method: 'HEAD', cache: 'no-cache' })
+                .then(response => {
+                    if (response.ok) {
+                        statusEl.textContent = '✅ Connection restored! Redirecting...';
+                        statusEl.className = 'status online';
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    } else {
+                        throw new Error('Connection failed');
+                    }
+                })
+                .catch(() => {
+                    statusEl.textContent = '❌ Still offline. Try again in a moment.';
+                    statusEl.className = 'status';
+                });
+        }
+
+        // Auto-check connection periodically
+        setInterval(() => {
+            if (navigator.onLine) {
+                checkConnection();
+            }
+        }, 30000); // Check every 30 seconds
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '✅ Connection restored! Redirecting...';
+            statusEl.className = 'status online';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        });
+
+        window.addEventListener('offline', () => {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '📡 You\'re currently offline. Some features may be limited.';
+            statusEl.className = 'status';
+        });
+    </script>
+</body>
+</html>

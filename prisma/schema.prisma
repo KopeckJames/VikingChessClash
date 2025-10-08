@@ -1,0 +1,360 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  username        String    @unique
+  displayName     String
+  avatar          String?
+  emailVerified   DateTime?
+  password        String
+  
+  // Game Statistics
+  rating          Int       @default(1200)
+  peakRating      Int       @default(1200)
+  wins            Int       @default(0)
+  losses          Int       @default(0)
+  draws           Int       @default(0)
+  winStreak       Int       @default(0)
+  longestStreak   Int       @default(0)
+  
+  // Preferences
+  preferredRole   Role      @default(DEFENDER)
+  theme           String    @default("dark")
+  language        String    @default("en")
+  notifications   Boolean   @default(true)
+  
+  // Social Features
+  friends         Friendship[] @relation("UserFriends")
+  friendOf        Friendship[] @relation("FriendOfUser")
+  achievements    UserAchievement[]
+  
+  // Game Relations
+  hostedGames     Game[]    @relation("GameHost")
+  guestGames      Game[]    @relation("GameGuest")
+  chatMessages    ChatMessage[]
+  aiGames         AIGame[]
+  
+  // Tournament Relations
+  tournamentParticipations TournamentParticipant[]
+  
+  // Spectator Relations
+  spectatingGames GameSpectator[]
+  
+  // Authentication Relations
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  
+  // Push Notification Relations
+  pushSubscriptions PushSubscription[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastSeen        DateTime  @default(now())
+}
+
+model Game {
+  id              String    @id @default(cuid())
+  
+  // Players
+  host            User      @relation("GameHost", fields: [hostId], references: [id])
+  hostId          String
+  guest           User?     @relation("GameGuest", fields: [guestId], references: [id])
+  guestId         String?
+  
+  // Game State
+  status          GameStatus @default(WAITING)
+  boardState      Json
+  moveHistory     Json      @default("[]")
+  currentPlayer   Role      @default(ATTACKER)
+  
+  // Game Configuration
+  hostRole        Role      @default(DEFENDER)
+  timeControl     String    @default("15+10")
+  isRanked        Boolean   @default(true)
+  isPrivate       Boolean   @default(false)
+  
+  // Game Results
+  winner          Role?
+  winCondition    WinCondition?
+  winnerId        String?
+  
+  // Tournament Integration
+  tournament      Tournament? @relation(fields: [tournamentId], references: [id])
+  tournamentId    String?
+  
+  // Real-time Features
+  spectators      GameSpectator[]
+  chatMessages    ChatMessage[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+}
+
+model AIGame {
+  id              String    @id @default(cuid())
+  
+  // Player
+  player          User      @relation(fields: [playerId], references: [id])
+  playerId        String
+  
+  // AI Opponent
+  aiOpponent      AIOpponent @relation(fields: [aiOpponentId], references: [id])
+  aiOpponentId    String
+  
+  // Game State
+  status          GameStatus @default(ACTIVE)
+  boardState      Json
+  moveHistory     Json      @default("[]")
+  currentPlayer   Role      @default(ATTACKER)
+  
+  // Game Configuration
+  playerRole      Role      @default(DEFENDER)
+  difficulty      Int       @default(3)
+  
+  // Game Results
+  winner          Role?
+  winCondition    WinCondition?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+}
+
+model AIOpponent {
+  id              String    @id @default(cuid())
+  name            String
+  difficulty      Int       // 1-10 scale
+  rating          Int
+  personality     String    // Aggressive, Defensive, Balanced
+  avatar          String?
+  
+  // AI Configuration
+  thinkingTime    Int       @default(2000) // milliseconds
+  strategy        Json      // AI strategy parameters
+  
+  games           AIGame[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Tournament {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  format          TournamentFormat
+  status          TournamentStatus @default(REGISTRATION)
+  
+  // Configuration
+  maxParticipants Int
+  entryFee        Int       @default(0)
+  prizePool       Int       @default(0)
+  timeControl     String    @default("15+10")
+  
+  // Participants
+  participants    TournamentParticipant[]
+  games           Game[]
+  
+  // Schedule
+  registrationEnd DateTime
+  startDate       DateTime
+  endDate         DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model TournamentParticipant {
+  id              String    @id @default(cuid())
+  
+  tournament      Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId    String
+  
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String
+  
+  // Tournament Stats
+  wins            Int       @default(0)
+  losses          Int       @default(0)
+  draws           Int       @default(0)
+  points          Int       @default(0)
+  rank            Int?
+  
+  registeredAt    DateTime  @default(now())
+  
+  @@unique([tournamentId, userId])
+}
+
+model Friendship {
+  id              String    @id @default(cuid())
+  
+  user            User      @relation("UserFriends", fields: [userId], references: [id])
+  userId          String
+  
+  friend          User      @relation("FriendOfUser", fields: [friendId], references: [id])
+  friendId        String
+  
+  status          FriendshipStatus @default(PENDING)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([userId, friendId])
+}
+
+model Achievement {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  description     String
+  icon            String
+  category        String
+  points          Int       @default(0)
+  
+  // Achievement Criteria
+  criteria        Json      // Flexible criteria definition
+  
+  users           UserAchievement[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model UserAchievement {
+  id              String    @id @default(cuid())
+  
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String
+  
+  achievement     Achievement @relation(fields: [achievementId], references: [id])
+  achievementId   String
+  
+  unlockedAt      DateTime  @default(now())
+  
+  @@unique([userId, achievementId])
+}
+
+model ChatMessage {
+  id              String    @id @default(cuid())
+  
+  game            Game      @relation(fields: [gameId], references: [id])
+  gameId          String
+  
+  sender          User      @relation(fields: [senderId], references: [id])
+  senderId        String
+  
+  message         String
+  messageType     MessageType @default(TEXT)
+  
+  createdAt       DateTime  @default(now())
+}
+
+model GameSpectator {
+  id              String    @id @default(cuid())
+  
+  game            Game      @relation(fields: [gameId], references: [id])
+  gameId          String
+  
+  spectator       User      @relation(fields: [spectatorId], references: [id])
+  spectatorId     String
+  
+  joinedAt        DateTime  @default(now())
+  
+  @@unique([gameId, spectatorId])
+}
+
+model VerificationToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+}
+
+model PasswordResetToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+}
+
+model PushSubscription {
+  id              String    @id @default(cuid())
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  
+  endpoint        String
+  p256dh          String
+  auth            String
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([userId, endpoint])
+}
+
+// Enums
+enum Role {
+  ATTACKER
+  DEFENDER
+}
+
+enum GameStatus {
+  WAITING
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum WinCondition {
+  KING_ESCAPE
+  KING_CAPTURED
+  RESIGNATION
+  TIMEOUT
+  DRAW
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+  SWISS
+}
+
+enum TournamentStatus {
+  REGISTRATION
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+  EMOJI
+}

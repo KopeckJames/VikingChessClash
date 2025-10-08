@@ -16,6 +16,68 @@ function calculateNewRating(
   return Math.round(playerRating + kFactor * (result - expectedScore))
 }
 
+// Handle AI game completion
+async function handleAIGameCompletion(
+  userId: number,
+  winner: string,
+  winCondition: string,
+  aiLevel: string,
+  playerRole: string,
+  res: NextApiResponse
+) {
+  try {
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Get AI opponent rating based on level
+    const aiRatings = {
+      easy: 800,
+      medium: 1200,
+      hard: 1600,
+    }
+    const aiRating = aiRatings[aiLevel as keyof typeof aiRatings] || 1200
+
+    // Determine if player won
+    const playerWon = winner === playerRole
+    const isDraw = winner === 'draw'
+
+    // Calculate new rating
+    const result = isDraw ? 0.5 : playerWon ? 1 : 0
+    const newRating = calculateNewRating(user.rating, aiRating, result)
+
+    // Update user stats
+    const newWinStreak = playerWon ? user.winStreak + 1 : 0
+    const newBestRating = Math.max(user.bestRating, newRating)
+
+    await db
+      .update(users)
+      .set({
+        rating: newRating,
+        wins: playerWon ? user.wins + 1 : user.wins,
+        losses: !playerWon && !isDraw ? user.losses + 1 : user.losses,
+        draws: isDraw ? user.draws + 1 : user.draws,
+        gamesPlayed: user.gamesPlayed + 1,
+        winStreak: newWinStreak,
+        bestRating: newBestRating,
+      })
+      .where(eq(users.id, userId))
+
+    return res.status(200).json({
+      message: 'AI game completed successfully',
+      winner,
+      winCondition,
+      ratingChange: newRating - user.rating,
+      newRating,
+    })
+  } catch (error) {
+    console.error('AI game completion error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST'])
@@ -29,11 +91,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { gameId, winner, winCondition } = req.body
+    const { gameId, winner, winCondition, isAIGame, aiLevel, playerRole } = req.body
     const userId = parseInt(session.user.id)
 
-    if (!gameId || !winner || !winCondition) {
+    if (!winner || !winCondition) {
       return res.status(400).json({ error: 'Missing required fields' })
+    }
+
+    // Handle AI games differently (they don't have a real gameId in the database)
+    if (isAIGame) {
+      return handleAIGameCompletion(userId, winner, winCondition, aiLevel, playerRole, res)
+    }
+
+    if (!gameId) {
+      return res.status(400).json({ error: 'Game ID is required for multiplayer games' })
     }
 
     // Get game details

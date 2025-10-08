@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import './viking-board.css'
 
 type PieceType = 'king' | 'defender' | 'attacker' | null
 type BoardState = PieceType[][]
@@ -638,23 +637,31 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              {/* Wooden king piece with Norse crown */}
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 rounded-full flex items-center justify-center shadow-xl border-3 border-amber-500 relative overflow-hidden">
-                {/* Wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-transparent to-amber-900/30 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(245,158,11,0.3),transparent_50%)] rounded-full"></div>
+              {/* Light wooden king piece with golden crown */}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 rounded-full flex items-center justify-center shadow-xl border-4 border-yellow-500 relative overflow-hidden piece-wood-grain">
+                {/* Light wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 via-transparent to-amber-600/20 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(254,240,138,0.4),transparent_50%)] rounded-full"></div>
+
+                {/* Golden crown highlight */}
+                <div className="absolute inset-1 bg-gradient-to-br from-yellow-300/40 to-transparent rounded-full"></div>
 
                 {/* Norse crown symbol */}
-                <div className="relative z-10 text-amber-100 text-lg sm:text-xl font-bold drop-shadow-lg norse-symbol">
-                  ᚴ
+                <div className="relative z-10 text-amber-900 text-lg sm:text-xl font-bold drop-shadow-sm norse-symbol">
+                  ♔
                 </div>
 
-                {/* Carved details */}
-                <div className="absolute top-1 left-1 w-2 h-2 bg-amber-400/40 rounded-full blur-sm"></div>
-                <div className="absolute bottom-1 right-1 w-1 h-1 bg-amber-900/60 rounded-full"></div>
+                {/* Carved details - light wood */}
+                <div className="absolute top-1 left-1 w-2 h-2 bg-yellow-200/60 rounded-full blur-sm"></div>
+                <div className="absolute bottom-1 right-1 w-1 h-1 bg-amber-700/40 rounded-full"></div>
+
+                {/* Crown jewels */}
+                <div className="absolute top-0.5 left-1/2 w-1 h-1 bg-red-500/80 rounded-full transform -translate-x-1/2"></div>
+                <div className="absolute top-1 left-1/3 w-0.5 h-0.5 bg-blue-500/80 rounded-full"></div>
+                <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-emerald-500/80 rounded-full"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-40"></div>
+                <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-50"></div>
               )}
             </div>
           </div>
@@ -663,23 +670,30 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              {/* Wooden defender piece with shield symbol */}
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-800 via-red-900 to-red-950 rounded-full flex items-center justify-center shadow-lg border-2 border-red-700 relative overflow-hidden">
-                {/* Wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-transparent to-red-950/40 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_25%,rgba(185,28,28,0.3),transparent_50%)] rounded-full"></div>
+              {/* Light wooden defender piece with shield symbol */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 rounded-full flex items-center justify-center shadow-lg border-3 border-amber-400 relative overflow-hidden piece-wood-grain">
+                {/* Light wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-100/30 via-transparent to-amber-500/20 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_25%,rgba(254,243,199,0.4),transparent_50%)] rounded-full"></div>
 
-                {/* Shield/Valknut symbol */}
-                <div className="relative z-10 text-red-100 text-sm sm:text-base font-bold drop-shadow norse-symbol">
-                  ᛞ
+                {/* Shield highlight */}
+                <div className="absolute inset-1 bg-gradient-to-br from-amber-200/40 to-transparent rounded-full"></div>
+
+                {/* Shield symbol */}
+                <div className="relative z-10 text-amber-800 text-sm sm:text-base font-bold drop-shadow-sm norse-symbol">
+                  🛡
                 </div>
 
-                {/* Carved details */}
-                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-red-500/40 rounded-full blur-sm"></div>
-                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-red-950/80 rounded-full"></div>
+                {/* Carved details - light wood */}
+                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-yellow-200/50 rounded-full blur-sm"></div>
+                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-amber-600/40 rounded-full"></div>
+
+                {/* Shield decorations */}
+                <div className="absolute top-1 left-1/2 w-0.5 h-2 bg-amber-600/60 rounded-full transform -translate-x-1/2"></div>
+                <div className="absolute top-1/2 left-1 w-2 h-0.5 bg-amber-600/60 rounded-full transform -translate-y-1/2"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-40"></div>
+                <div className="absolute inset-0 bg-amber-300 rounded-full animate-ping opacity-50"></div>
               )}
             </div>
           </div>
@@ -688,23 +702,30 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              {/* Wooden attacker piece with axe symbol */}
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-stone-600 via-stone-700 to-stone-800 rounded-full flex items-center justify-center shadow-lg border-2 border-stone-500 relative overflow-hidden">
-                {/* Wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-stone-500/20 via-transparent to-stone-900/40 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(120,113,108,0.3),transparent_50%)] rounded-full"></div>
+              {/* Dark wooden attacker piece with axe symbol */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-full flex items-center justify-center shadow-xl border-3 border-gray-700 relative overflow-hidden piece-wood-grain">
+                {/* Dark wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/30 via-transparent to-black/50 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(75,85,99,0.4),transparent_50%)] rounded-full"></div>
+
+                {/* Dark wood highlight */}
+                <div className="absolute inset-1 bg-gradient-to-br from-gray-600/20 to-transparent rounded-full"></div>
 
                 {/* Viking axe symbol */}
-                <div className="relative z-10 text-stone-100 text-sm sm:text-base font-bold drop-shadow">
-                  ⚡
+                <div className="relative z-10 text-gray-200 text-sm sm:text-base font-bold drop-shadow-lg norse-symbol">
+                  ⚔
                 </div>
 
-                {/* Carved details */}
-                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-stone-400/40 rounded-full blur-sm"></div>
-                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-stone-900/80 rounded-full"></div>
+                {/* Carved details - dark wood */}
+                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-gray-600/40 rounded-full blur-sm"></div>
+                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-black/80 rounded-full"></div>
+
+                {/* Axe blade details */}
+                <div className="absolute top-1 right-1 w-1 h-1 bg-red-600/60 rounded-full"></div>
+                <div className="absolute bottom-1 left-1 w-0.5 h-1.5 bg-gray-500/60 rounded-full"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-stone-400 rounded-full animate-ping opacity-40"></div>
+                <div className="absolute inset-0 bg-gray-500 rounded-full animate-ping opacity-50"></div>
               )}
             </div>
           </div>
@@ -725,7 +746,7 @@ export default function GamePage() {
         (lastMove.to.row === row && lastMove.to.col === col))
 
     let baseClasses =
-      'board-square flex items-center justify-center relative rounded-lg border-2 shadow-sm wood-texture viking-piece'
+      'viking-board-square flex items-center justify-center relative rounded-lg border-2 shadow-sm wood-texture viking-piece'
 
     // Border and shadow effects
     if (isSelected) {
@@ -807,10 +828,15 @@ export default function GamePage() {
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              <span className="gradient-text">Hnefatafl</span>
+            <h1 className="text-4xl sm:text-5xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 bg-clip-text text-transparent norse-symbol">
+                ᚺᚾᛖᚠᚨᛏᚨᚠᛚ
+              </span>
             </h1>
-            <p className="text-lg text-gray-600 mb-6">Master the Ancient Viking Strategy Game</p>
+            <h2 className="text-2xl font-semibold text-amber-700 mb-4">Hnefatafl</h2>
+            <p className="text-lg text-amber-800 mb-6 font-medium">
+              Master the Ancient Viking Strategy Game
+            </p>
 
             <div className="flex justify-center items-center gap-6 mb-8">
               <div
@@ -824,8 +850,9 @@ export default function GamePage() {
                   <span className="text-2xl">⚔️</span>
                   <div>
                     <div className="font-bold">
-                      {gameMode === 'ai' && playerRole === 'defender' ? aiOpponent : 'Attackers'}
+                      {gameMode === 'ai' && playerRole === 'defender' ? aiOpponent : 'Dark Forces'}
                     </div>
+                    <div className="text-xs opacity-75">Attackers</div>
                     {currentPlayer === 'attacker' && (
                       <div className="text-sm opacity-90">
                         {gameMode === 'ai' && playerRole === 'defender'
@@ -852,8 +879,9 @@ export default function GamePage() {
                   <span className="text-2xl">🛡️</span>
                   <div>
                     <div className="font-bold">
-                      {gameMode === 'ai' && playerRole === 'attacker' ? aiOpponent : 'Defenders'}
+                      {gameMode === 'ai' && playerRole === 'attacker' ? aiOpponent : 'Light Forces'}
                     </div>
+                    <div className="text-xs opacity-75">Defenders</div>
                     {currentPlayer === 'defender' && (
                       <div className="text-sm opacity-90">
                         {gameMode === 'ai' && playerRole === 'attacker'
@@ -904,20 +932,46 @@ export default function GamePage() {
           <div className="flex flex-col xl:flex-row gap-8 items-start">
             {/* Viking Game Board */}
             <div className="flex-1 flex justify-center">
-              <div className="relative p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900">
-                {/* Celtic knotwork border */}
-                <div className="absolute inset-4 border-4 border-amber-600 rounded-2xl">
-                  <div className="absolute -top-1 -left-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
-                  <div className="absolute -bottom-1 -left-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
+              <div className="relative p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 board-edge-decoration">
+                {/* Outer Celtic border frame */}
+                <div className="absolute inset-2 border-8 border-amber-700 rounded-3xl celtic-border">
+                  {/* Corner Celtic knots */}
+                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full border-4 border-amber-500 flex items-center justify-center">
+                    <span className="text-amber-200 text-lg font-bold norse-symbol">ᚦ</span>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full border-4 border-amber-500 flex items-center justify-center">
+                    <span className="text-amber-200 text-lg font-bold norse-symbol">ᚱ</span>
+                  </div>
+                  <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full border-4 border-amber-500 flex items-center justify-center">
+                    <span className="text-amber-200 text-lg font-bold norse-symbol">ᚢ</span>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full border-4 border-amber-500 flex items-center justify-center">
+                    <span className="text-amber-200 text-lg font-bold norse-symbol">ᚾ</span>
+                  </div>
+
+                  {/* Side decorations */}
+                  <div className="absolute top-1/2 -left-1 w-8 h-16 bg-gradient-to-r from-amber-600 to-amber-700 rounded-r-lg transform -translate-y-1/2 flex items-center justify-center">
+                    <span className="text-amber-200 text-sm norse-symbol">ᛟ</span>
+                  </div>
+                  <div className="absolute top-1/2 -right-1 w-8 h-16 bg-gradient-to-l from-amber-600 to-amber-700 rounded-l-lg transform -translate-y-1/2 flex items-center justify-center">
+                    <span className="text-amber-200 text-sm norse-symbol">ᛗ</span>
+                  </div>
+                  <div className="absolute -top-1 left-1/2 w-16 h-8 bg-gradient-to-b from-amber-600 to-amber-700 rounded-b-lg transform -translate-x-1/2 flex items-center justify-center">
+                    <span className="text-amber-200 text-sm norse-symbol">ᛚ</span>
+                  </div>
+                  <div className="absolute -bottom-1 left-1/2 w-16 h-8 bg-gradient-to-t from-amber-600 to-amber-700 rounded-t-lg transform -translate-x-1/2 flex items-center justify-center">
+                    <span className="text-amber-200 text-sm norse-symbol">ᛒ</span>
+                  </div>
                 </div>
 
+                {/* Inner decorative border */}
+                <div className="absolute inset-6 border-4 border-amber-600 rounded-2xl bg-gradient-to-br from-amber-300/20 to-amber-500/20"></div>
+
                 {/* Wood grain texture overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-700/20 via-transparent to-amber-900/30 rounded-3xl pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-700/20 via-transparent to-amber-900/30 rounded-3xl pointer-events-none wood-texture"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(245,158,11,0.1),transparent_50%)] rounded-3xl pointer-events-none"></div>
 
-                <div className="relative grid grid-cols-11 gap-1 bg-gradient-to-br from-amber-200 via-amber-100 to-amber-200 p-6 rounded-2xl shadow-inner border-2 border-amber-400">
+                <div className="relative grid grid-cols-11 gap-1 bg-gradient-to-br from-amber-200 via-amber-100 to-amber-200 p-6 rounded-2xl shadow-inner border-4 border-amber-500 wood-texture">
                   {board.map((row, rowIndex) =>
                     row.map((piece, colIndex) => {
                       const isLastMoveSquare =
@@ -1050,26 +1104,34 @@ export default function GamePage() {
                 <h3 className="text-2xl font-bold gradient-text mb-6">Game Rules</h3>
 
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl border border-red-200">
-                    <h4 className="font-bold text-red-800 mb-2 flex items-center">
-                      <span className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm mr-3">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-300">
+                    <h4 className="font-bold text-gray-800 mb-2 flex items-center">
+                      <span className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-white text-sm mr-3">
                         ⚔️
                       </span>
-                      Attackers Goal
+                      Dark Forces Goal
                     </h4>
-                    <p className="text-red-700 ml-11">
+                    <p className="text-gray-700 ml-11">
                       Capture the king by surrounding it on all four sides
                     </p>
+                    <div className="text-xs text-gray-600 ml-11 mt-1">
+                      Dark wooden pieces (Attackers)
+                    </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                    <h4 className="font-bold text-blue-800 mb-2 flex items-center">
-                      <span className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm mr-3">
+                  <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-xl border border-amber-200">
+                    <h4 className="font-bold text-amber-800 mb-2 flex items-center">
+                      <span className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-sm mr-3">
                         🛡️
                       </span>
-                      Defenders Goal
+                      Light Forces Goal
                     </h4>
-                    <p className="text-blue-700 ml-11">Help the king escape to any corner square</p>
+                    <p className="text-amber-700 ml-11">
+                      Help the king escape to any corner square
+                    </p>
+                    <div className="text-xs text-amber-600 ml-11 mt-1">
+                      Light wooden pieces (Defenders + King)
+                    </div>
                   </div>
 
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">

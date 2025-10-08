@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 type PieceType = 'king' | 'defender' | 'attacker' | null
@@ -15,6 +16,7 @@ interface Move {
 }
 
 export default function GamePage() {
+  const { data: session, status } = useSession()
   const searchParams = useSearchParams()
   const gameMode = searchParams.get('mode') || 'local'
   const aiLevel = searchParams.get('level') || 'medium'
@@ -292,6 +294,11 @@ export default function GamePage() {
     const winner = checkWinCondition(newBoard)
     if (winner) {
       setGameStatus(winner)
+
+      // Save game completion to database if user is authenticated
+      if (session?.user?.id && gameMode === 'ai') {
+        saveGameCompletion(winner)
+      }
     } else {
       // Switch players
       setCurrentPlayer(currentPlayer === 'attacker' ? 'defender' : 'attacker')
@@ -620,6 +627,38 @@ export default function GamePage() {
     }
   }, [gameMode, aiLevel])
 
+  // Save game completion to database
+  async function saveGameCompletion(winner: 'attacker_wins' | 'defender_wins') {
+    if (!session?.user?.id || gameMode !== 'ai') return
+
+    try {
+      const gameWinner = winner === 'attacker_wins' ? 'attacker' : 'defender'
+      const winCondition = winner === 'attacker_wins' ? 'king_captured' : 'king_escape'
+
+      // For AI games, we'll create a simplified game record
+      const response = await fetch('/api/game/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameId: Date.now(), // Temporary ID for local games
+          winner: gameWinner,
+          winCondition,
+          isAIGame: true,
+          aiLevel,
+          playerRole,
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to save game completion')
+      }
+    } catch (error) {
+      console.error('Error saving game completion:', error)
+    }
+  }
+
   function resetGame() {
     setBoard(createInitialBoard())
     setCurrentPlayer('attacker')
@@ -821,6 +860,7 @@ export default function GamePage() {
               <Link href="/" className="modern-button-secondary text-sm">
                 ← Home
               </Link>
+              {/* Auth Status will be added here */}
             </div>
           </div>
         </div>

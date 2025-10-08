@@ -1,22 +1,23 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
-import { prisma } from '../../lib/prisma'
-import { sendVerificationEmail } from '../../lib/email'
-import { validatePassword, hashPassword } from '../../lib/password'
+import bcrypt from 'bcrypt'
+import { db } from '../../server/db'
+import { users } from '../../shared/schema'
+import { eq, or } from 'drizzle-orm'
 
 const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
   username: z
     .string()
     .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters'),
+    .max(20, 'Username must be less than 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   displayName: z
     .string()
     .min(1, 'Display name is required')
     .max(50, 'Display name must be less than 50 characters'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(6, 'Password must be at least 6 characters')
     .max(100, 'Password must be less than 100 characters'),
 })
 
@@ -26,65 +27,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { email, username, displayName, password } = registerSchema.parse(req.body)
+    const { username, displayName, password } = registerSchema.parse(req.body)
 
-    // Validate password strength
-    const passwordValidation = validatePassword(password)
-    if (!passwordValidation.valid) {
-      return res.status(400).json({
-        error: 'Password does not meet requirements',
-        details: passwordValidation.errors,
-      })
-    }
+    // Check if username already exists
+    const existingUser = await db.select().from(users).where(eq(users.username, username)).limit(1)
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
-    })
-
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(400).json({ error: 'Email already registered' })
-      }
-      if (existingUser.username === username) {
-        return res.status(400).json({ error: 'Username already taken' })
-      }
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: 'Username already taken' })
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
+    const [newUser] = await db
+      .insert(users)
+      .values({
         username,
         displayName,
         password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        displayName: true,
-        rating: true,
-        createdAt: true,
-      },
-    })
-
-    // Send verification email (implement this function)
-    try {
-      await sendVerificationEmail(user.email, user.id)
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError)
-      // Don't fail registration if email fails
-    }
+        rating: 1200,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        gamesPlayed: 0,
+        winStreak: 0,
+        bestRating: 1200,
+        preferredRole: 'defender',
+      })
+      .returning({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        rating: users.rating,
+        createdAt: users.createdAt,
+      })
 
     res.status(201).json({
-      message: 'User created successfully. Please check your email for verification.',
-      user,
+      message: 'User created successfully. You can now sign in.',
+      user: newUser,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {

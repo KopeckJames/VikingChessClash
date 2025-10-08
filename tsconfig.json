@@ -1,15 +1,21 @@
 {
   "include": [
-    "client/src/**/*", 
-    "shared/**/*", 
-    "server/**/*", 
-    "lib/**/*", 
-    "api/**/*", 
-    "middleware/**/*", 
+    "api/**/*",
+    "client/src/**/*",
+    "lib/**/*",
+    "middleware/**/*",
+    "prisma/**/*",
+    "server/**/*",
+    "shared/**/*",
     "types/**/*",
-    "prisma/**/*"
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ],
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
@@ -22,7 +28,11 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "lib": ["ES2022", "dom", "dom.iterable"],
+    "lib": [
+      "ES2022",
+      "dom",
+      "dom.iterable"
+    ],
     "jsx": "preserve",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -32,13 +42,32 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "baseUrl": ".",
-    "types": ["node", "vite/client"],
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "paths": {
-      "@/*": ["./client/src/*"],
-      "@shared/*": ["./shared/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/api/*": ["./api/*"],
-      "@/types/*": ["./types/*"]
-    }
+      "@/*": [
+        "./client/src/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/api/*": [
+        "./api/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ]
+    },
+    "allowJs": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   }
 }

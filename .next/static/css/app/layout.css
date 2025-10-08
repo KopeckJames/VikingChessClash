@@ -620,7 +620,9 @@ video {
 }
   body {
   background-color: hsl(var(--background));
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   color: hsl(var(--foreground));
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 .container {
   width: 100%;
@@ -661,6 +663,10 @@ video {
     max-width: 1536px;
   }
 }
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
 .sr-only {
   position: absolute;
   width: 1px;
@@ -3281,6 +3287,8 @@ video {
 .paused {
   animation-play-state: paused;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 .file\:border-0::file-selector-button {
   border-width: 0px;

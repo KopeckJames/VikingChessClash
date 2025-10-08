@@ -320,7 +320,7 @@ export default function GamePage() {
       const adjacentPiece = boardState[adjacentRow][adjacentCol]
 
       // Can't capture empty squares or same team pieces
-      if (!adjacentPiece || adjacentPiece === currentPiece) continue
+      if (!adjacentPiece || !isEnemyPiece(adjacentPiece, currentPiece)) continue
 
       // Special rules for capturing the king - skip for now, handle in win condition
       if (adjacentPiece === 'king') {
@@ -330,21 +330,28 @@ export default function GamePage() {
       // Regular piece capture rules
       let canCapture = false
 
-      // Check if opposite square is out of bounds (edge capture)
+      // Check if opposite square is out of bounds (wall capture)
       if (oppositeRow < 0 || oppositeRow >= 11 || oppositeCol < 0 || oppositeCol >= 11) {
-        // Edge capture - piece is trapped against board edge
+        // Wall capture - piece is trapped against board edge by any piece
         canCapture = true
       } else {
         const oppositePiece = boardState[oppositeRow][oppositeCol]
 
         // Standard sandwich capture - piece must be between two hostile squares
-        canCapture =
-          oppositePiece === currentPiece || // Friendly piece
-          (oppositeRow === 5 && oppositeCol === 5) || // Throne (empty or occupied by king)
-          isCorner(oppositeRow, oppositeCol) // Corner (empty or occupied)
+        if (oppositePiece === currentPiece) {
+          // Captured by friendly piece on opposite side
+          canCapture = true
+        } else if (isSpecialSquare(oppositeRow, oppositeCol)) {
+          // Captured against throne or corner (acts as hostile square)
+          canCapture = true
+        } else if (oppositePiece && isEnemyPiece(oppositePiece, adjacentPiece)) {
+          // Some variants allow capture between two enemy pieces
+          // For standard rules, this should be false
+          canCapture = false
+        }
       }
 
-      if (canCapture && isEnemyPiece(adjacentPiece, currentPiece)) {
+      if (canCapture) {
         captures.push({ row: adjacentRow, col: adjacentCol })
       }
     }
@@ -352,14 +359,26 @@ export default function GamePage() {
     return captures
   }
 
+  function isSpecialSquare(row: number, col: number): boolean {
+    // Throne square (center)
+    if (row === 5 && col === 5) return true
+
+    // Corner squares
+    if (isCorner(row, col)) return true
+
+    return false
+  }
+
   function isEnemyPiece(piece: PieceType, currentPiece: PieceType): boolean {
     if (!piece || !currentPiece) return false
 
     if (currentPiece === 'attacker') {
       return piece === 'defender' || piece === 'king'
-    } else {
+    } else if (currentPiece === 'defender' || currentPiece === 'king') {
       return piece === 'attacker'
     }
+
+    return false
   }
 
   function getAdjacentSquares(row: number, col: number): Position[] {
@@ -1159,8 +1178,49 @@ export default function GamePage() {
                         sandwiching enemies
                       </li>
                       <li className="flex items-center">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Special
-                        squares aid in captures
+                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Wall
+                        captures: trap pieces against board edge
+                      </li>
+                      <li className="flex items-center">
+                        <span className="w-2 h-2 bg-gray-400 rounded-full mr-3"></span>Throne &
+                        corners act as hostile squares
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
+                    <h4 className="font-bold text-orange-800 mb-3 flex items-center">
+                      <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm mr-3">
+                        ⚡
+                      </span>
+                      Capture Rules
+                    </h4>
+                    <ul className="text-orange-700 space-y-2 ml-11 text-sm">
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
+                        <span>
+                          <strong>Sandwich:</strong> Trap enemy between two of your pieces
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
+                        <span>
+                          <strong>Wall Capture:</strong> Any piece can be captured against board
+                          edge
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
+                        <span>
+                          <strong>Special Squares:</strong> Throne & corners count as hostile
+                          squares
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full mr-3 mt-1.5 flex-shrink-0"></span>
+                        <span>
+                          <strong>King:</strong> Must be surrounded on all 4 sides to capture
+                        </span>
                       </li>
                     </ul>
                   </div>

@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const config = {
   experimental: {
-    appDir: true,
     serverComponentsExternalPackages: ['@prisma/client'],
   },
   images: {

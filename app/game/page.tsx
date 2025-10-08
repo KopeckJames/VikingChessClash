@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import './viking-board.css'
 
 type PieceType = 'king' | 'defender' | 'attacker' | null
 type BoardState = PieceType[][]
@@ -14,6 +16,11 @@ interface Move {
 }
 
 export default function GamePage() {
+  const searchParams = useSearchParams()
+  const gameMode = searchParams.get('mode') || 'local'
+  const aiLevel = searchParams.get('level') || 'medium'
+  const playerRole = searchParams.get('role') || 'attacker'
+
   const [board, setBoard] = useState<BoardState>(() => createInitialBoard())
   const [currentPlayer, setCurrentPlayer] = useState<'attacker' | 'defender'>('attacker')
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null)
@@ -24,6 +31,8 @@ export default function GamePage() {
   const [moveHistory, setMoveHistory] = useState<Move[]>([])
   const [lastMove, setLastMove] = useState<Move | null>(null)
   const [capturePreview, setCapturePreview] = useState<Position[]>([])
+  const [isAIThinking, setIsAIThinking] = useState(false)
+  const [aiOpponent, setAiOpponent] = useState<string>('')
 
   function createInitialBoard(): BoardState {
     const board: BoardState = Array(11)
@@ -204,6 +213,14 @@ export default function GamePage() {
   }
 
   function handleSquareClick(row: number, col: number) {
+    // Disable input during AI turn or when AI is thinking
+    if (gameMode === 'ai') {
+      const aiRole = playerRole === 'attacker' ? 'defender' : 'attacker'
+      if (currentPlayer === aiRole || isAIThinking) {
+        return
+      }
+    }
+
     const clickedPos = { row, col }
     const piece = board[row][col]
 
@@ -238,6 +255,12 @@ export default function GamePage() {
   }
 
   function canPlayerMovePiece(piece: PieceType, player: 'attacker' | 'defender'): boolean {
+    // In AI mode, only allow player to move their own pieces
+    if (gameMode === 'ai') {
+      const isPlayerTurn = player === playerRole
+      if (!isPlayerTurn) return false
+    }
+
     if (player === 'attacker') {
       return piece === 'attacker'
     } else {
@@ -477,6 +500,111 @@ export default function GamePage() {
     return isKingCompletelyTrapped(kingPos, boardState)
   }
 
+  // AI move logic
+  async function makeAIMove() {
+    if (gameMode !== 'ai' || gameStatus !== 'playing') return
+
+    const aiRole = playerRole === 'attacker' ? 'defender' : 'attacker'
+    if (currentPlayer !== aiRole) return
+
+    setIsAIThinking(true)
+
+    try {
+      // Get AI move using simple logic for now
+      const aiMove = getAIMove(board, aiRole)
+
+      if (aiMove) {
+        // Show the AI's selected piece briefly
+        setSelectedSquare(aiMove.from)
+        setValidMoves(getValidMoves(aiMove.from))
+
+        // Simulate AI thinking time based on difficulty
+        const thinkingTime = aiLevel === 'easy' ? 800 : aiLevel === 'medium' ? 1500 : 2500
+        await new Promise(resolve => setTimeout(resolve, thinkingTime))
+
+        // Make the move
+        makeMove(aiMove.from, aiMove.to)
+        setSelectedSquare(null)
+        setValidMoves([])
+      }
+    } catch (error) {
+      console.error('AI move error:', error)
+    } finally {
+      setIsAIThinking(false)
+    }
+  }
+
+  // Simple AI move selection (can be enhanced with the full AI engine later)
+  function getAIMove(boardState: BoardState, role: 'attacker' | 'defender'): Move | null {
+    const possibleMoves: Move[] = []
+
+    // Find all possible moves for the AI
+    for (let row = 0; row < 11; row++) {
+      for (let col = 0; col < 11; col++) {
+        const piece = boardState[row][col]
+        if (!piece) continue
+
+        // Check if this piece belongs to the AI
+        const belongsToAI =
+          (role === 'attacker' && piece === 'attacker') ||
+          (role === 'defender' && (piece === 'defender' || piece === 'king'))
+
+        if (!belongsToAI) continue
+
+        // Get valid moves for this piece
+        const validMovesForPiece = getValidMoves({ row, col })
+
+        for (const move of validMovesForPiece) {
+          possibleMoves.push({
+            from: { row, col },
+            to: move,
+            piece,
+          })
+        }
+      }
+    }
+
+    if (possibleMoves.length === 0) return null
+
+    // Simple AI: prioritize captures, then random move
+    const movesWithCaptures = possibleMoves.filter(move => {
+      const tempBoard = boardState.map(row => [...row])
+      tempBoard[move.to.row][move.to.col] = move.piece
+      tempBoard[move.from.row][move.from.col] = null
+      const captures = checkCaptures(move.to, tempBoard)
+      return captures.length > 0
+    })
+
+    const selectedMoves = movesWithCaptures.length > 0 ? movesWithCaptures : possibleMoves
+    return selectedMoves[Math.floor(Math.random() * selectedMoves.length)]
+  }
+
+  // Effect to trigger AI moves
+  useEffect(() => {
+    if (gameMode === 'ai' && gameStatus === 'playing') {
+      const aiRole = playerRole === 'attacker' ? 'defender' : 'attacker'
+      if (currentPlayer === aiRole && !isAIThinking) {
+        const timer = setTimeout(() => {
+          makeAIMove()
+        }, 1000) // Small delay for better UX
+
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [currentPlayer, gameMode, gameStatus, isAIThinking])
+
+  // Set AI opponent name based on level
+  useEffect(() => {
+    if (gameMode === 'ai') {
+      const aiNames = {
+        easy: 'Viking Novice',
+        medium: 'Berserker Tactician',
+        hard: 'Grandmaster Warlord',
+      }
+      setAiOpponent(aiNames[aiLevel as keyof typeof aiNames] || 'AI Opponent')
+    }
+  }, [gameMode, aiLevel])
+
   function resetGame() {
     setBoard(createInitialBoard())
     setCurrentPlayer('attacker')
@@ -486,9 +614,10 @@ export default function GamePage() {
     setMoveHistory([])
     setLastMove(null)
     setCapturePreview([])
+    setIsAIThinking(false)
   }
 
-  // Modern piece components
+  // Viking-style wooden piece components
   function PieceComponent({
     piece,
     isSelected,
@@ -501,7 +630,7 @@ export default function GamePage() {
     if (!piece) return null
 
     const baseClasses = 'w-full h-full flex items-center justify-center transition-all duration-300'
-    const selectedClass = isSelected ? 'transform scale-125 drop-shadow-2xl' : 'hover:scale-110'
+    const selectedClass = isSelected ? 'transform scale-110 drop-shadow-2xl' : 'hover:scale-105'
     const lastMoveClass = isLastMove ? 'animate-pulse-slow' : ''
 
     switch (piece) {
@@ -509,11 +638,23 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg border-2 border-yellow-300">
-                <span className="text-white text-lg sm:text-xl font-bold">♔</span>
+              {/* Wooden king piece with Norse crown */}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 rounded-full flex items-center justify-center shadow-xl border-3 border-amber-500 relative overflow-hidden">
+                {/* Wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-transparent to-amber-900/30 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(245,158,11,0.3),transparent_50%)] rounded-full"></div>
+
+                {/* Norse crown symbol */}
+                <div className="relative z-10 text-amber-100 text-lg sm:text-xl font-bold drop-shadow-lg norse-symbol">
+                  ᚴ
+                </div>
+
+                {/* Carved details */}
+                <div className="absolute top-1 left-1 w-2 h-2 bg-amber-400/40 rounded-full blur-sm"></div>
+                <div className="absolute bottom-1 right-1 w-1 h-1 bg-amber-900/60 rounded-full"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-30"></div>
+                <div className="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-40"></div>
               )}
             </div>
           </div>
@@ -522,11 +663,23 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-lg border-2 border-blue-400">
-                <span className="text-white text-sm sm:text-base font-bold">♗</span>
+              {/* Wooden defender piece with shield symbol */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-800 via-red-900 to-red-950 rounded-full flex items-center justify-center shadow-lg border-2 border-red-700 relative overflow-hidden">
+                {/* Wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-transparent to-red-950/40 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_25%,rgba(185,28,28,0.3),transparent_50%)] rounded-full"></div>
+
+                {/* Shield/Valknut symbol */}
+                <div className="relative z-10 text-red-100 text-sm sm:text-base font-bold drop-shadow norse-symbol">
+                  ᛞ
+                </div>
+
+                {/* Carved details */}
+                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-red-500/40 rounded-full blur-sm"></div>
+                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-red-950/80 rounded-full"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-30"></div>
+                <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-40"></div>
               )}
             </div>
           </div>
@@ -535,11 +688,23 @@ export default function GamePage() {
         return (
           <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
             <div className="relative">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg border-2 border-red-400">
-                <span className="text-white text-sm sm:text-base font-bold">♜</span>
+              {/* Wooden attacker piece with axe symbol */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-stone-600 via-stone-700 to-stone-800 rounded-full flex items-center justify-center shadow-lg border-2 border-stone-500 relative overflow-hidden">
+                {/* Wood grain texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-stone-500/20 via-transparent to-stone-900/40 rounded-full"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(120,113,108,0.3),transparent_50%)] rounded-full"></div>
+
+                {/* Viking axe symbol */}
+                <div className="relative z-10 text-stone-100 text-sm sm:text-base font-bold drop-shadow">
+                  ⚡
+                </div>
+
+                {/* Carved details */}
+                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-stone-400/40 rounded-full blur-sm"></div>
+                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-stone-900/80 rounded-full"></div>
               </div>
               {isSelected && (
-                <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-30"></div>
+                <div className="absolute inset-0 bg-stone-400 rounded-full animate-ping opacity-40"></div>
               )}
             </div>
           </div>
@@ -560,7 +725,7 @@ export default function GamePage() {
         (lastMove.to.row === row && lastMove.to.col === col))
 
     let baseClasses =
-      'board-square flex items-center justify-center relative rounded-lg border-2 shadow-sm'
+      'board-square flex items-center justify-center relative rounded-lg border-2 shadow-sm wood-texture viking-piece'
 
     // Border and shadow effects
     if (isSelected) {
@@ -573,24 +738,28 @@ export default function GamePage() {
       baseClasses += ' border-gray-300 hover:border-gray-400'
     }
 
-    // Background colors with modern gradients
+    // Viking wooden board colors with natural wood grain
     if (isSelected) {
-      baseClasses += ' bg-gradient-to-br from-blue-100 to-blue-200'
+      baseClasses += ' bg-gradient-to-br from-amber-200 to-amber-300 border-amber-500'
     } else if (isValidMove) {
       baseClasses +=
-        ' bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-150'
+        ' bg-gradient-to-br from-emerald-200 to-emerald-300 hover:from-emerald-250 hover:to-emerald-350 border-emerald-500'
     } else if (isThrone && !piece) {
-      baseClasses += ' bg-gradient-to-br from-yellow-200 to-yellow-300 border-yellow-400'
+      // Ornate throne square with Celtic pattern
+      baseClasses +=
+        ' bg-gradient-to-br from-amber-300 to-amber-400 border-amber-600 relative throne-glow'
     } else if (isCornerSquare && !piece) {
-      baseClasses += ' bg-gradient-to-br from-purple-200 to-purple-300 border-purple-400'
+      // Corner squares with Norse knotwork
+      baseClasses +=
+        ' bg-gradient-to-br from-amber-400 to-amber-500 border-amber-700 relative corner-glow'
     } else if (isLastMoveSquare) {
-      baseClasses += ' bg-gradient-to-br from-indigo-100 to-indigo-200 border-indigo-300'
+      baseClasses += ' bg-gradient-to-br from-blue-200 to-blue-300 border-blue-400'
     } else {
-      // Modern checkerboard pattern
+      // Natural wood grain pattern
       const isLight = (row + col) % 2 === 0
       baseClasses += isLight
-        ? ' bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150'
-        : ' bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-150 hover:to-gray-250'
+        ? ' bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-150 border-amber-200'
+        : ' bg-gradient-to-br from-amber-100 to-amber-200 hover:from-amber-150 hover:to-amber-250 border-amber-300'
     }
 
     return baseClasses
@@ -623,9 +792,19 @@ export default function GamePage() {
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              <span>Practice Mode • Local Game</span>
+            <div
+              className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium mb-6 ${
+                gameMode === 'ai' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full animate-pulse ${
+                  gameMode === 'ai' ? 'bg-purple-500' : 'bg-blue-500'
+                }`}
+              ></span>
+              <span>
+                {gameMode === 'ai' ? `AI Battle • vs ${aiOpponent}` : 'Practice Mode • Local Game'}
+              </span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
@@ -644,9 +823,17 @@ export default function GamePage() {
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">⚔️</span>
                   <div>
-                    <div className="font-bold">Attackers</div>
+                    <div className="font-bold">
+                      {gameMode === 'ai' && playerRole === 'defender' ? aiOpponent : 'Attackers'}
+                    </div>
                     {currentPlayer === 'attacker' && (
-                      <div className="text-sm opacity-90">Your Turn</div>
+                      <div className="text-sm opacity-90">
+                        {gameMode === 'ai' && playerRole === 'defender'
+                          ? isAIThinking
+                            ? 'Thinking...'
+                            : 'AI Turn'
+                          : 'Your Turn'}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -664,9 +851,17 @@ export default function GamePage() {
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🛡️</span>
                   <div>
-                    <div className="font-bold">Defenders</div>
+                    <div className="font-bold">
+                      {gameMode === 'ai' && playerRole === 'attacker' ? aiOpponent : 'Defenders'}
+                    </div>
                     {currentPlayer === 'defender' && (
-                      <div className="text-sm opacity-90">Your Turn</div>
+                      <div className="text-sm opacity-90">
+                        {gameMode === 'ai' && playerRole === 'attacker'
+                          ? isAIThinking
+                            ? 'Thinking...'
+                            : 'AI Turn'
+                          : 'Your Turn'}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -707,10 +902,22 @@ export default function GamePage() {
           </div>
 
           <div className="flex flex-col xl:flex-row gap-8 items-start">
-            {/* Game Board */}
+            {/* Viking Game Board */}
             <div className="flex-1 flex justify-center">
-              <div className="glass-card p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-white to-gray-50">
-                <div className="grid grid-cols-11 gap-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-inner">
+              <div className="relative p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900">
+                {/* Celtic knotwork border */}
+                <div className="absolute inset-4 border-4 border-amber-600 rounded-2xl">
+                  <div className="absolute -top-1 -left-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
+                  <div className="absolute -bottom-1 -left-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 border-2 border-amber-500 rounded-full bg-amber-700"></div>
+                </div>
+
+                {/* Wood grain texture overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-700/20 via-transparent to-amber-900/30 rounded-3xl pointer-events-none"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(245,158,11,0.1),transparent_50%)] rounded-3xl pointer-events-none"></div>
+
+                <div className="relative grid grid-cols-11 gap-1 bg-gradient-to-br from-amber-200 via-amber-100 to-amber-200 p-6 rounded-2xl shadow-inner border-2 border-amber-400">
                   {board.map((row, rowIndex) =>
                     row.map((piece, colIndex) => {
                       const isLastMoveSquare =
@@ -765,15 +972,31 @@ export default function GamePage() {
                           {/* Special square indicators */}
                           {rowIndex === 5 && colIndex === 5 && !piece && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center border-2 border-yellow-400">
-                                <span className="text-yellow-700 text-xs font-bold">♔</span>
+                              {/* Ornate throne with Celtic cross */}
+                              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center border-2 border-amber-700 shadow-lg relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-300/40 via-transparent to-amber-800/40 rounded-lg"></div>
+                                <span className="relative text-amber-900 text-sm font-bold drop-shadow">
+                                  ⚜
+                                </span>
+                                {/* Corner decorations */}
+                                <div className="absolute -top-0.5 -left-0.5 w-1 h-1 bg-amber-300 rounded-full"></div>
+                                <div className="absolute -top-0.5 -right-0.5 w-1 h-1 bg-amber-300 rounded-full"></div>
+                                <div className="absolute -bottom-0.5 -left-0.5 w-1 h-1 bg-amber-300 rounded-full"></div>
+                                <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 bg-amber-300 rounded-full"></div>
                               </div>
                             </div>
                           )}
                           {isCorner(rowIndex, colIndex) && !piece && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-6 h-6 bg-purple-200 rounded-lg flex items-center justify-center border border-purple-400">
-                                <span className="text-purple-700 text-xs">🏰</span>
+                              {/* Norse corner markers with knotwork */}
+                              <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-700 rounded-lg flex items-center justify-center border-2 border-amber-800 shadow-md relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-400/30 via-transparent to-amber-900/50 rounded-lg"></div>
+                                <span className="relative text-amber-100 text-xs font-bold drop-shadow">
+                                  ◊
+                                </span>
+                                {/* Knotwork pattern */}
+                                <div className="absolute top-0 left-1 w-0.5 h-2 bg-amber-300/60 rounded-full transform rotate-45"></div>
+                                <div className="absolute top-0 right-1 w-0.5 h-2 bg-amber-300/60 rounded-full transform -rotate-45"></div>
                               </div>
                             </div>
                           )}
@@ -808,6 +1031,21 @@ export default function GamePage() {
 
             {/* Game Info Panel */}
             <div className="w-full xl:w-96">
+              {/* AI Status Indicator */}
+              {gameMode === 'ai' && isAIThinking && (
+                <div className="glass-card rounded-2xl p-4 mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div>
+                      <div className="font-semibold text-purple-800">
+                        {aiOpponent} is thinking...
+                      </div>
+                      <div className="text-sm text-purple-600">Planning the next move</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="glass-card rounded-2xl p-6 space-y-6">
                 <h3 className="text-2xl font-bold gradient-text mb-6">Game Rules</h3>
 

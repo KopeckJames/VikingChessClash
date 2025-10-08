@@ -1,6 +1,6 @@
 // Simple test to verify AI system functionality
-import { HnefataflAI, createAIConfig, AI_PERSONALITIES } from './shared/ai-engine.js'
-import { createInitialBoard } from './client/src/lib/game-logic.js'
+import { HnefataflAI, createAIConfig, AI_PERSONALITIES } from './shared/ai-engine.ts'
+import { createInitialBoard } from './client/src/lib/game-logic.ts'
 
 async function testAISystem() {
   console.log('Testing AI System...')

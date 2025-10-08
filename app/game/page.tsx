@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import SoundEffects from '../components/SoundEffects'
+import PerformanceMonitor from '../components/PerformanceMonitor'
 
 type PieceType = 'king' | 'defender' | 'attacker' | null
 type BoardState = PieceType[][]
@@ -180,38 +182,41 @@ export default function GamePage() {
     return true
   }
 
-  function getValidMoves(position: Position): Position[] {
-    const piece = board[position.row][position.col]
-    if (!piece) return []
+  const getValidMoves = useCallback(
+    (position: Position): Position[] => {
+      const piece = board[position.row][position.col]
+      if (!piece) return []
 
-    const moves: Position[] = []
+      const moves: Position[] = []
 
-    // Check all four directions
-    const directions = [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
-    ]
+      // Check all four directions
+      const directions = [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+      ]
 
-    for (const [rowDir, colDir] of directions) {
-      for (let i = 1; i < 11; i++) {
-        const newRow = position.row + rowDir * i
-        const newCol = position.col + colDir * i
+      for (const [rowDir, colDir] of directions) {
+        for (let i = 1; i < 11; i++) {
+          const newRow = position.row + rowDir * i
+          const newCol = position.col + colDir * i
 
-        if (newRow < 0 || newRow >= 11 || newCol < 0 || newCol >= 11) break
+          if (newRow < 0 || newRow >= 11 || newCol < 0 || newCol >= 11) break
 
-        const targetPos = { row: newRow, col: newCol }
-        if (isValidMove(position, targetPos, piece)) {
-          moves.push(targetPos)
-        } else {
-          break
+          const targetPos = { row: newRow, col: newCol }
+          if (isValidMove(position, targetPos, piece)) {
+            moves.push(targetPos)
+          } else {
+            break
+          }
         }
       }
-    }
 
-    return moves
-  }
+      return moves
+    },
+    [board]
+  )
 
   function handleSquareClick(row: number, col: number) {
     // Disable input during AI turn or when AI is thinking
@@ -671,196 +676,235 @@ export default function GamePage() {
     setIsAIThinking(false)
   }
 
-  // Viking-style wooden piece components
-  function PieceComponent({
-    piece,
-    isSelected,
-    isLastMove,
-  }: {
-    piece: PieceType
-    isSelected: boolean
-    isLastMove: boolean
-  }) {
-    if (!piece) return null
+  // Optimized Viking-style wooden piece components
+  const PieceComponent = useMemo(
+    () =>
+      ({
+        piece,
+        isSelected,
+        isLastMove,
+      }: {
+        piece: PieceType
+        isSelected: boolean
+        isLastMove: boolean
+      }) => {
+        if (!piece) return null
 
-    const baseClasses = 'w-full h-full flex items-center justify-center transition-all duration-300'
-    const selectedClass = isSelected ? 'transform scale-110 drop-shadow-2xl' : 'hover:scale-105'
-    const lastMoveClass = isLastMove ? 'animate-pulse-slow' : ''
+        const baseClasses =
+          'w-full h-full flex items-center justify-center transition-all duration-300'
+        const selectedClass = isSelected ? 'transform scale-110 drop-shadow-2xl' : 'hover:scale-105'
+        const lastMoveClass = isLastMove ? 'animate-pulse-slow' : ''
 
-    switch (piece) {
-      case 'king':
-        return (
-          <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
-            <div className="relative">
-              {/* Light wooden king piece with golden crown */}
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 rounded-full flex items-center justify-center shadow-xl border-4 border-yellow-500 relative overflow-hidden piece-wood-grain">
-                {/* Light wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 via-transparent to-amber-600/20 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(254,240,138,0.4),transparent_50%)] rounded-full"></div>
+        switch (piece) {
+          case 'king':
+            return (
+              <div
+                className={`${baseClasses} ${selectedClass} ${lastMoveClass} aaa-piece aaa-piece-king`}
+              >
+                <div className="relative aaa-sound-wave">
+                  {/* Enhanced AAA King piece with cinematic effects */}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 rounded-full flex items-center justify-center shadow-xl border-4 border-yellow-500 relative overflow-hidden piece-wood-grain aaa-glow-pulse">
+                    {/* Light wood grain texture */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 via-transparent to-amber-600/20 rounded-full"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(254,240,138,0.4),transparent_50%)] rounded-full"></div>
 
-                {/* Golden crown highlight */}
-                <div className="absolute inset-1 bg-gradient-to-br from-yellow-300/40 to-transparent rounded-full"></div>
+                    {/* Golden crown highlight */}
+                    <div className="absolute inset-1 bg-gradient-to-br from-yellow-300/40 to-transparent rounded-full"></div>
 
-                {/* Norse crown symbol */}
-                <div className="relative z-10 text-amber-900 text-lg sm:text-xl font-bold drop-shadow-sm norse-symbol">
-                  ♔
+                    {/* Norse crown symbol */}
+                    <div className="relative z-10 text-amber-900 text-lg sm:text-xl font-bold drop-shadow-sm norse-symbol">
+                      ♔
+                    </div>
+
+                    {/* Carved details - light wood */}
+                    <div className="absolute top-1 left-1 w-2 h-2 bg-yellow-200/60 rounded-full blur-sm"></div>
+                    <div className="absolute bottom-1 right-1 w-1 h-1 bg-amber-700/40 rounded-full"></div>
+
+                    {/* Crown jewels */}
+                    <div className="absolute top-0.5 left-1/2 w-1 h-1 bg-red-500/80 rounded-full transform -translate-x-1/2"></div>
+                    <div className="absolute top-1 left-1/3 w-0.5 h-0.5 bg-blue-500/80 rounded-full"></div>
+                    <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-emerald-500/80 rounded-full"></div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-50"></div>
+                  )}
                 </div>
-
-                {/* Carved details - light wood */}
-                <div className="absolute top-1 left-1 w-2 h-2 bg-yellow-200/60 rounded-full blur-sm"></div>
-                <div className="absolute bottom-1 right-1 w-1 h-1 bg-amber-700/40 rounded-full"></div>
-
-                {/* Crown jewels */}
-                <div className="absolute top-0.5 left-1/2 w-1 h-1 bg-red-500/80 rounded-full transform -translate-x-1/2"></div>
-                <div className="absolute top-1 left-1/3 w-0.5 h-0.5 bg-blue-500/80 rounded-full"></div>
-                <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-emerald-500/80 rounded-full"></div>
               </div>
-              {isSelected && (
-                <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-50"></div>
-              )}
-            </div>
-          </div>
-        )
-      case 'defender':
-        return (
-          <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
-            <div className="relative">
-              {/* Light wooden defender piece with shield symbol */}
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 rounded-full flex items-center justify-center shadow-lg border-3 border-amber-400 relative overflow-hidden piece-wood-grain">
-                {/* Light wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-100/30 via-transparent to-amber-500/20 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_25%,rgba(254,243,199,0.4),transparent_50%)] rounded-full"></div>
+            )
+          case 'defender':
+            return (
+              <div
+                className={`${baseClasses} ${selectedClass} ${lastMoveClass} aaa-piece aaa-piece-defender`}
+              >
+                <div className="relative">
+                  {/* Enhanced AAA Defender piece */}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 rounded-full flex items-center justify-center shadow-lg border-3 border-amber-400 relative overflow-hidden piece-wood-grain">
+                    {/* Light wood grain texture */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-100/30 via-transparent to-amber-500/20 rounded-full"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_25%,rgba(254,243,199,0.4),transparent_50%)] rounded-full"></div>
 
-                {/* Shield highlight */}
-                <div className="absolute inset-1 bg-gradient-to-br from-amber-200/40 to-transparent rounded-full"></div>
+                    {/* Shield highlight */}
+                    <div className="absolute inset-1 bg-gradient-to-br from-amber-200/40 to-transparent rounded-full"></div>
 
-                {/* Shield symbol */}
-                <div className="relative z-10 text-amber-800 text-sm sm:text-base font-bold drop-shadow-sm norse-symbol">
-                  🛡
+                    {/* Shield symbol */}
+                    <div className="relative z-10 text-amber-800 text-sm sm:text-base font-bold drop-shadow-sm norse-symbol">
+                      🛡
+                    </div>
+
+                    {/* Carved details - light wood */}
+                    <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-yellow-200/50 rounded-full blur-sm"></div>
+                    <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-amber-600/40 rounded-full"></div>
+
+                    {/* Shield decorations */}
+                    <div className="absolute top-1 left-1/2 w-0.5 h-2 bg-amber-600/60 rounded-full transform -translate-x-1/2"></div>
+                    <div className="absolute top-1/2 left-1 w-2 h-0.5 bg-amber-600/60 rounded-full transform -translate-y-1/2"></div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-amber-300 rounded-full animate-ping opacity-50"></div>
+                  )}
                 </div>
-
-                {/* Carved details - light wood */}
-                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-yellow-200/50 rounded-full blur-sm"></div>
-                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-amber-600/40 rounded-full"></div>
-
-                {/* Shield decorations */}
-                <div className="absolute top-1 left-1/2 w-0.5 h-2 bg-amber-600/60 rounded-full transform -translate-x-1/2"></div>
-                <div className="absolute top-1/2 left-1 w-2 h-0.5 bg-amber-600/60 rounded-full transform -translate-y-1/2"></div>
               </div>
-              {isSelected && (
-                <div className="absolute inset-0 bg-amber-300 rounded-full animate-ping opacity-50"></div>
-              )}
-            </div>
-          </div>
-        )
-      case 'attacker':
-        return (
-          <div className={`${baseClasses} ${selectedClass} ${lastMoveClass}`}>
-            <div className="relative">
-              {/* Dark wooden attacker piece with axe symbol */}
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-full flex items-center justify-center shadow-xl border-3 border-gray-700 relative overflow-hidden piece-wood-grain">
-                {/* Dark wood grain texture */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/30 via-transparent to-black/50 rounded-full"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(75,85,99,0.4),transparent_50%)] rounded-full"></div>
+            )
+          case 'attacker':
+            return (
+              <div
+                className={`${baseClasses} ${selectedClass} ${lastMoveClass} aaa-piece aaa-piece-attacker`}
+              >
+                <div className="relative">
+                  {/* Enhanced AAA Attacker piece */}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-full flex items-center justify-center shadow-xl border-3 border-gray-700 relative overflow-hidden piece-wood-grain">
+                    {/* Dark wood grain texture */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-700/30 via-transparent to-black/50 rounded-full"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(75,85,99,0.4),transparent_50%)] rounded-full"></div>
 
-                {/* Dark wood highlight */}
-                <div className="absolute inset-1 bg-gradient-to-br from-gray-600/20 to-transparent rounded-full"></div>
+                    {/* Dark wood highlight */}
+                    <div className="absolute inset-1 bg-gradient-to-br from-gray-600/20 to-transparent rounded-full"></div>
 
-                {/* Viking axe symbol */}
-                <div className="relative z-10 text-gray-200 text-sm sm:text-base font-bold drop-shadow-lg norse-symbol">
-                  ⚔
+                    {/* Viking axe symbol */}
+                    <div className="relative z-10 text-gray-200 text-sm sm:text-base font-bold drop-shadow-lg norse-symbol">
+                      ⚔
+                    </div>
+
+                    {/* Carved details - dark wood */}
+                    <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-gray-600/40 rounded-full blur-sm"></div>
+                    <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-black/80 rounded-full"></div>
+
+                    {/* Axe blade details */}
+                    <div className="absolute top-1 right-1 w-1 h-1 bg-red-600/60 rounded-full"></div>
+                    <div className="absolute bottom-1 left-1 w-0.5 h-1.5 bg-gray-500/60 rounded-full"></div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-gray-500 rounded-full animate-ping opacity-50"></div>
+                  )}
                 </div>
-
-                {/* Carved details - dark wood */}
-                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-gray-600/40 rounded-full blur-sm"></div>
-                <div className="absolute bottom-0.5 right-0.5 w-1 h-1 bg-black/80 rounded-full"></div>
-
-                {/* Axe blade details */}
-                <div className="absolute top-1 right-1 w-1 h-1 bg-red-600/60 rounded-full"></div>
-                <div className="absolute bottom-1 left-1 w-0.5 h-1.5 bg-gray-500/60 rounded-full"></div>
               </div>
-              {isSelected && (
-                <div className="absolute inset-0 bg-gray-500 rounded-full animate-ping opacity-50"></div>
-              )}
-            </div>
-          </div>
-        )
-      default:
-        return null
-    }
-  }
+            )
+          default:
+            return null
+        }
+      },
+    [board, selectedSquare, lastMove]
+  )
 
-  function getSquareStyle(row: number, col: number, piece: PieceType) {
-    const isSelected = selectedSquare?.row === row && selectedSquare?.col === col
-    const isValidMove = validMoves.some(move => move.row === row && move.col === col)
-    const isThrone = row === 5 && col === 5
-    const isCornerSquare = isCorner(row, col)
-    const isLastMoveSquare =
-      lastMove &&
-      ((lastMove.from.row === row && lastMove.from.col === col) ||
-        (lastMove.to.row === row && lastMove.to.col === col))
+  const getSquareStyle = useCallback(
+    (row: number, col: number, piece: PieceType) => {
+      const isSelected = selectedSquare?.row === row && selectedSquare?.col === col
+      const isValidMove = validMoves.some(move => move.row === row && move.col === col)
+      const isThrone = row === 5 && col === 5
+      const isCornerSquare = isCorner(row, col)
+      const isLastMoveSquare =
+        lastMove &&
+        ((lastMove.from.row === row && lastMove.from.col === col) ||
+          (lastMove.to.row === row && lastMove.to.col === col))
 
-    let baseClasses =
-      'viking-board-square flex items-center justify-center relative rounded-lg border-2 shadow-sm wood-texture viking-piece'
+      let baseClasses =
+        'aaa-square flex items-center justify-center relative rounded-lg shadow-sm wood-texture viking-piece transition-all duration-200 outline-none border-0'
 
-    // Border and shadow effects
-    if (isSelected) {
-      baseClasses +=
-        ' border-blue-400 shadow-lg shadow-blue-400/50 ring-2 ring-blue-300 ring-opacity-50'
-    } else if (isValidMove) {
-      baseClasses +=
-        ' border-green-400 shadow-md shadow-green-400/30 ring-2 ring-green-300 ring-opacity-30'
-    } else {
-      baseClasses += ' border-gray-300 hover:border-gray-400'
-    }
+      // Simplified border and shadow effects - no rings or scaling
+      if (isSelected) {
+        baseClasses += ' shadow-lg shadow-blue-400/50 aaa-piece-selected'
+      } else if (isValidMove) {
+        baseClasses += ' shadow-md shadow-green-400/30'
+      } else {
+        baseClasses += ' hover:shadow-md'
+      }
 
-    // Viking wooden board colors with natural wood grain
-    if (isSelected) {
-      baseClasses += ' bg-gradient-to-br from-amber-200 to-amber-300 border-amber-500'
-    } else if (isValidMove) {
-      baseClasses +=
-        ' bg-gradient-to-br from-emerald-200 to-emerald-300 hover:from-emerald-250 hover:to-emerald-350 border-emerald-500'
-    } else if (isThrone && !piece) {
-      // Ornate throne square with Celtic pattern
-      baseClasses +=
-        ' bg-gradient-to-br from-amber-300 to-amber-400 border-amber-600 relative throne-glow'
-    } else if (isCornerSquare && !piece) {
-      // Corner squares with Norse knotwork
-      baseClasses +=
-        ' bg-gradient-to-br from-amber-400 to-amber-500 border-amber-700 relative corner-glow'
-    } else if (isLastMoveSquare) {
-      baseClasses += ' bg-gradient-to-br from-blue-200 to-blue-300 border-blue-400'
-    } else {
-      // Natural wood grain pattern
-      const isLight = (row + col) % 2 === 0
-      baseClasses += isLight
-        ? ' bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-150 border-amber-200'
-        : ' bg-gradient-to-br from-amber-100 to-amber-200 hover:from-amber-150 hover:to-amber-250 border-amber-300'
-    }
+      // Simplified Viking wooden board colors
+      if (isSelected) {
+        baseClasses += ' bg-gradient-to-br from-blue-200 to-blue-300'
+      } else if (isValidMove) {
+        baseClasses +=
+          ' bg-gradient-to-br from-emerald-200/80 to-emerald-300/80 hover:from-emerald-250 hover:to-emerald-350'
+      } else if (isThrone && !piece) {
+        // Simplified throne square
+        baseClasses += ' aaa-square-throne bg-gradient-to-br from-amber-300 to-amber-400'
+      } else if (isCornerSquare && !piece) {
+        // Simplified corner squares
+        baseClasses += ' aaa-square-corner bg-gradient-to-br from-amber-400 to-amber-500'
+      } else if (isLastMoveSquare) {
+        baseClasses += ' bg-gradient-to-br from-blue-200/80 to-blue-300/80'
+      } else {
+        // Natural wood grain pattern
+        const isLight = (row + col) % 2 === 0
+        baseClasses += isLight
+          ? ' bg-gradient-to-br from-amber-50/80 to-amber-100/80 hover:from-amber-100 hover:to-amber-150'
+          : ' bg-gradient-to-br from-amber-100/80 to-amber-200/80 hover:from-amber-150 hover:to-amber-250'
+      }
 
-    return baseClasses
-  }
+      return baseClasses
+    },
+    [selectedSquare, validMoves, lastMove]
+  )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="glass-card rounded-none border-0 border-b">
+    <div className="min-h-screen aaa-background relative overflow-hidden">
+      {/* AAA Navigation */}
+      <nav className="aaa-nav relative z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">V</span>
+            <Link href="/" className="flex items-center space-x-4 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <span className="text-white font-bold text-xl norse-symbol">ᚠ</span>
               </div>
-              <span className="text-xl font-bold gradient-text">Viking Chess</span>
+              <div>
+                <span className="text-2xl font-bold aaa-title">HNEFATAFL</span>
+                <div className="text-sm aaa-subtitle">Viking Chess Clash</div>
+              </div>
             </Link>
             <div className="flex items-center space-x-4">
-              <Link href="/game/ai" className="modern-button-secondary text-sm">
-                🤖 AI Challenge
+              <Link href="/game/ai" className="aaa-button-secondary text-sm px-4 py-2">
+                <span className="flex items-center space-x-2">
+                  <span>🤖</span>
+                  <span>AI CHALLENGE</span>
+                </span>
               </Link>
-              <Link href="/" className="modern-button-secondary text-sm">
-                ← Home
+              <Link href="/leaderboard" className="aaa-button-secondary text-sm px-4 py-2">
+                <span className="flex items-center space-x-2">
+                  <span>🏆</span>
+                  <span>LEADERBOARD</span>
+                </span>
               </Link>
-              {/* Auth Status will be added here */}
+              {session?.user ? (
+                <div className="flex items-center space-x-3">
+                  <div className="aaa-card px-4 py-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm norse-symbol">
+                          {session.user.displayName?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <div className="font-semibold text-white">{session.user.displayName}</div>
+                        <div className="text-amber-300">⚡ {session.user.rating || 1200}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link href="/auth/signin" className="aaa-button text-sm px-6 py-2">
+                  SIGN IN
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -896,10 +940,10 @@ export default function GamePage() {
 
             <div className="flex justify-center items-center gap-6 mb-8">
               <div
-                className={`glass-card px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
+                className={`aaa-status px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
                   currentPlayer === 'attacker'
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl transform scale-105 ring-4 ring-red-200'
-                    : 'text-gray-600 hover:shadow-lg'
+                    ? 'aaa-status-active bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl transform scale-105 ring-4 ring-red-200'
+                    : 'text-gray-300 hover:shadow-lg hover:border-red-400/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -925,10 +969,10 @@ export default function GamePage() {
               <div className="text-3xl animate-pulse">⚡</div>
 
               <div
-                className={`glass-card px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
+                className={`aaa-status px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
                   currentPlayer === 'defender'
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl transform scale-105 ring-4 ring-blue-200'
-                    : 'text-gray-600 hover:shadow-lg'
+                    ? 'aaa-status-active bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl transform scale-105 ring-4 ring-blue-200'
+                    : 'text-gray-300 hover:shadow-lg hover:border-blue-400/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -953,33 +997,62 @@ export default function GamePage() {
             </div>
 
             {gameStatus !== 'playing' && (
-              <div className="mb-8 glass-card rounded-3xl p-8 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200">
-                <div className="text-center">
+              <div className="aaa-victory-overlay fixed inset-0 flex items-center justify-center z-50">
+                <div className="aaa-victory-content p-12 max-w-2xl mx-4 text-center relative overflow-hidden">
+                  {/* Cinematic background effects */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-amber-700/20 pointer-events-none"></div>
                   <div
-                    className={`text-5xl mb-4 ${
-                      gameStatus === 'attacker_wins' ? 'text-red-500' : 'text-blue-500'
-                    }`}
-                  >
-                    {gameStatus === 'attacker_wins' ? '⚔️' : '🛡️'}
+                    className={`absolute inset-0 ${gameStatus === 'attacker_wins' ? 'bg-gradient-to-br from-red-900/30 to-red-700/20' : 'bg-gradient-to-br from-blue-900/30 to-blue-700/20'} pointer-events-none`}
+                  ></div>
+
+                  {/* Victory animation */}
+                  <div className="relative z-10">
+                    <div
+                      className={`text-8xl mb-6 animate-bounce ${
+                        gameStatus === 'attacker_wins' ? 'text-red-400' : 'text-blue-400'
+                      }`}
+                    >
+                      {gameStatus === 'attacker_wins' ? '⚔️' : '🛡️'}
+                    </div>
+
+                    <div className="aaa-title text-5xl font-bold mb-6 relative">
+                      <span
+                        className={`${gameStatus === 'attacker_wins' ? 'text-red-300' : 'text-blue-300'}`}
+                      >
+                        {gameStatus === 'attacker_wins'
+                          ? 'DARK FORCES TRIUMPH!'
+                          : 'LIGHT FORCES PREVAIL!'}
+                      </span>
+                    </div>
+
+                    <div className="text-2xl text-amber-200 mb-8 font-semibold">
+                      {gameStatus === 'attacker_wins'
+                        ? '🏰 The throne has fallen to darkness!'
+                        : '👑 The king has reached sanctuary!'}
+                    </div>
+
+                    <div className="flex justify-center space-x-6">
+                      <button
+                        onClick={resetGame}
+                        className="aaa-button text-lg px-10 py-4 relative overflow-hidden"
+                      >
+                        <span className="flex items-center space-x-3">
+                          <span className="text-2xl">🎮</span>
+                          <span>BATTLE AGAIN</span>
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => (window.location.href = '/lobby')}
+                        className="aaa-button-secondary text-lg px-10 py-4"
+                      >
+                        <span className="flex items-center space-x-3">
+                          <span className="text-2xl">🏛️</span>
+                          <span>RETURN TO HALL</span>
+                        </span>
+                      </button>
+                    </div>
                   </div>
-                  <div
-                    className={`text-3xl font-bold mb-4 ${
-                      gameStatus === 'attacker_wins' ? 'text-red-600' : 'text-blue-600'
-                    }`}
-                  >
-                    {gameStatus === 'attacker_wins' ? 'Attackers Victory!' : 'Defenders Victory!'}
-                  </div>
-                  <p className="text-xl text-gray-600 mb-6">
-                    {gameStatus === 'attacker_wins'
-                      ? 'The king has been captured or surrounded!'
-                      : 'The king has escaped to a corner!'}
-                  </p>
-                  <button onClick={resetGame} className="modern-button-primary text-lg px-8 py-4">
-                    <span className="flex items-center space-x-2">
-                      <span>🎮</span>
-                      <span>New Game</span>
-                    </span>
-                  </button>
                 </div>
               </div>
             )}
@@ -988,7 +1061,9 @@ export default function GamePage() {
           <div className="flex flex-col xl:flex-row gap-8 items-start">
             {/* Viking Game Board */}
             <div className="flex-1 flex justify-center">
-              <div className="relative p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 board-edge-decoration">
+              <div className="aaa-game-board relative p-8 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 board-edge-decoration">
+                {/* Simplified Board Effects for Performance */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-600/10 via-transparent to-amber-900/20 rounded-3xl pointer-events-none"></div>
                 {/* Outer Celtic border frame */}
                 <div className="absolute inset-2 border-8 border-amber-700 rounded-3xl celtic-border">
                   {/* Corner Celtic knots */}
@@ -1039,26 +1114,6 @@ export default function GamePage() {
                         <button
                           key={`${rowIndex}-${colIndex}`}
                           onClick={() => handleSquareClick(rowIndex, colIndex)}
-                          onMouseEnter={() => {
-                            if (
-                              selectedSquare &&
-                              validMoves.some(
-                                move => move.row === rowIndex && move.col === colIndex
-                              )
-                            ) {
-                              // Show capture preview
-                              const tempBoard = board.map(row => [...row])
-                              tempBoard[rowIndex][colIndex] =
-                                tempBoard[selectedSquare.row][selectedSquare.col]
-                              tempBoard[selectedSquare.row][selectedSquare.col] = null
-                              const captures = checkCaptures(
-                                { row: rowIndex, col: colIndex },
-                                tempBoard
-                              )
-                              setCapturePreview(captures)
-                            }
-                          }}
-                          onMouseLeave={() => setCapturePreview([])}
                           className={getSquareStyle(rowIndex, colIndex, piece)}
                           disabled={gameStatus !== 'playing'}
                         >
@@ -1143,21 +1198,52 @@ export default function GamePage() {
             <div className="w-full xl:w-96">
               {/* AI Status Indicator */}
               {gameMode === 'ai' && isAIThinking && (
-                <div className="glass-card rounded-2xl p-4 mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="aaa-card rounded-2xl p-6 mb-6 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-2 border-purple-400/50 relative overflow-hidden">
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-transparent to-indigo-600/20 animate-pulse"></div>
+                  <div
+                    className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(147,51,234,0.1),transparent)] animate-spin"
+                    style={{ animationDuration: '3s' }}
+                  ></div>
+
+                  <div className="relative flex items-center space-x-4">
+                    <div className="relative">
+                      <div className="w-10 h-10 border-3 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                      <div
+                        className="absolute inset-0 w-10 h-10 border-3 border-indigo-400/50 border-b-transparent rounded-full animate-spin"
+                        style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}
+                      ></div>
+                    </div>
                     <div>
-                      <div className="font-semibold text-purple-800">
-                        {aiOpponent} is thinking...
+                      <div className="font-bold text-purple-200 text-lg flex items-center space-x-2">
+                        <span className="animate-pulse">🤖</span>
+                        <span>{aiOpponent} is calculating...</span>
                       </div>
-                      <div className="text-sm text-purple-600">Planning the next move</div>
+                      <div className="text-sm text-purple-300 animate-pulse">
+                        Analyzing strategic possibilities
+                      </div>
+                      <div className="flex space-x-1 mt-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '0.1s' }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '0.2s' }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="glass-card rounded-2xl p-6 space-y-6">
-                <h3 className="text-2xl font-bold gradient-text mb-6">Game Rules</h3>
+              <div className="aaa-card rounded-2xl p-6 space-y-6 relative overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-amber-700/10 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full blur-xl"></div>
+
+                <h3 className="aaa-title text-2xl font-bold mb-6 relative z-10">⚔️ Game Rules</h3>
 
                 <div className="space-y-4">
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-300">
@@ -1320,6 +1406,12 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+
+      {/* AAA Sound Effects System */}
+      <SoundEffects gameStatus={gameStatus} lastMove={lastMove} isAIThinking={isAIThinking} />
+
+      {/* Performance Monitor (Triple-click to toggle) */}
+      <PerformanceMonitor />
     </div>
   )
 }

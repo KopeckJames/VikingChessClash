@@ -1,0 +1,541 @@
+/* AAA Game UI Styles */
+
+/* Custom Properties for AAA Theme */
+:root {
+  /* Colors */
+  --primary-gold: #d4af37;
+  --primary-gold-light: #f4d03f;
+  --primary-gold-dark: #b7950b;
+  --secondary-bronze: #cd7f32;
+  --accent-red: #8b0000;
+  --accent-blue: #1e3a8a;
+  
+  /* Gradients */
+  --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ffb347 50%, #cd853f 100%);
+  --gradient-metal: linear-gradient(135deg, #c0c0c0 0%, #808080 50%, #404040 100%);
+  --gradient-fire: linear-gradient(135deg, #ff4500 0%, #ff6347 50%, #dc143c 100%);
+  --gradient-ice: linear-gradient(135deg, #87ceeb 0%, #4682b4 50%, #191970 100%);
+  
+  /* Shadows */
+  --shadow-glow: 0 0 20px rgba(212, 175, 55, 0.5);
+  --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  /* Animations */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Simplified Background */
+.aaa-background {
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Particles Disabled for Performance */
+.particles {
+  display: none;
+}
+
+/* AAA Game Cards */
+.aaa-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+/* Removed shine animation for performance */
+
+.aaa-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(212, 175, 55, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* AAA Buttons */
+.aaa-button {
+  position: relative;
+  padding: 12px 32px;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: 8px;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 
+    0 4px 15px rgba(212, 175, 55, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+/* Removed button shine animation for performance */
+
+.aaa-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(212, 175, 55, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.aaa-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 10px rgba(212, 175, 55, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.aaa-button-secondary {
+  background: var(--gradient-metal);
+  color: #ffffff;
+  box-shadow: 
+    0 4px 15px rgba(128, 128, 128, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.aaa-button-danger {
+  background: var(--gradient-fire);
+  color: #ffffff;
+  box-shadow: 
+    0 4px 15px rgba(220, 20, 60, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* AAA Navigation */
+.aaa-nav {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.8) 0%, 
+    rgba(26, 26, 46, 0.9) 100%
+  );
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* AAA Typography */
+.aaa-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.aaa-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: var(--gradient-gold);
+  border-radius: 1px;
+}
+
+.aaa-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Optimized AAA Game Board */
+.aaa-game-board {
+  background: linear-gradient(135deg, 
+    rgba(139, 69, 19, 0.9) 0%, 
+    rgba(160, 82, 45, 0.8) 50%, 
+    rgba(101, 67, 33, 0.9) 100%
+  );
+  border: 4px solid var(--primary-gold);
+  border-radius: 20px;
+  box-shadow: 
+    0 0 20px rgba(212, 175, 55, 0.3),
+    inset 0 0 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  min-width: 600px;
+  min-height: 600px;
+  width: auto;
+  height: auto;
+}
+
+.aaa-game-board * {
+  outline: none !important;
+  border: none !important;
+}
+
+.aaa-game-board button {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.aaa-game-board button:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Optimized AAA Game Pieces */
+.aaa-piece {
+  position: relative;
+  transition: transform 0.15s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.aaa-piece:hover {
+  transform: translateY(-1px);
+}
+
+
+
+/* Simplified Status Indicators */
+.aaa-status {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.8) 0%, 
+    rgba(26, 26, 46, 0.9) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.aaa-status-active {
+  border-color: var(--primary-gold);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+/* AAA Loading Animations */
+.aaa-loading {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-gold);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* AAA Modal/Dialog */
+.aaa-modal {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.95) 0%, 
+    rgba(26, 26, 46, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(212, 175, 55, 0.3);
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* AAA Input Fields */
+.aaa-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 16px;
+  transition: var(--transition-smooth);
+  backdrop-filter: blur(10px);
+}
+
+.aaa-input:focus {
+  outline: none;
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.aaa-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Simplified Progress Bars */
+.aaa-progress {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 8px;
+  position: relative;
+}
+
+.aaa-progress-bar {
+  height: 100%;
+  background: var(--gradient-gold);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* Simplified Tooltips */
+.aaa-tooltip {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.9) 0%, 
+    rgba(26, 26, 46, 0.95) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 14px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Simplified Game Pieces */
+.aaa-piece-king {
+  position: relative;
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.4));
+}
+
+.aaa-piece-defender {
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+.aaa-piece-attacker {
+  filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
+}
+
+/* Optimized Square Styles */
+.aaa-square {
+  position: relative;
+  transition: background-color 0.15s ease;
+  background: rgba(245, 158, 11, 0.05);
+  outline: none !important;
+  border: 2px solid transparent !important;
+  box-sizing: border-box;
+}
+
+.aaa-square:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.aaa-square:focus,
+.aaa-square:focus-visible,
+.aaa-square:active {
+  outline: none !important;
+  border: 2px solid transparent !important;
+  box-shadow: none !important;
+}
+
+/* Prevent board container from changing size */
+.aaa-game-board .grid {
+  width: 100%;
+  height: 100%;
+  min-width: 500px;
+  min-height: 500px;
+}
+
+/* Remove all default button styles */
+.viking-piece {
+  outline: none !important;
+  border: 2px solid transparent !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.viking-piece:focus,
+.viking-piece:focus-visible,
+.viking-piece:active {
+  outline: none !important;
+  border: 2px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.aaa-square-throne {
+  background: rgba(212, 175, 55, 0.15);
+  box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.1);
+}
+
+.aaa-square-corner {
+  background: rgba(139, 69, 19, 0.2);
+  box-shadow: inset 0 0 8px rgba(139, 69, 19, 0.15);
+}
+
+/* Cinematic Victory Effects */
+.aaa-victory-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(26, 26, 46, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  animation: victory-appear 0.5s ease-out;
+}
+
+@keyframes victory-appear {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.aaa-victory-content {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 2px solid var(--primary-gold);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(212, 175, 55, 0.5);
+  animation: victory-content-appear 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes victory-content-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Removed enhanced animations for performance */
+
+/* Performance Optimized Responsive Design */
+@media (max-width: 768px) {
+  .aaa-background {
+    background-attachment: scroll;
+  }
+  
+  .aaa-card {
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .aaa-button {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+  
+  .aaa-game-board {
+    border-width: 2px;
+    border-radius: 16px;
+  }
+  
+  .particles {
+    display: none; /* Disable particles on mobile for performance */
+  }
+  
+  .aaa-title {
+    font-size: 1.5rem;
+  }
+  
+  /* Disable heavy animations on mobile */
+  .aaa-epic-glow::before,
+  .aaa-glow-pulse,
+  .aaa-sound-wave::before,
+  .aaa-sound-wave::after {
+    animation: none;
+  }
+}
+
+/* Performance mode for slower devices */
+@media (max-width: 1024px) {
+  .particles {
+    display: none; /* Disable particles on tablets too */
+  }
+  
+  .aaa-epic-glow::before {
+    animation-duration: 8s; /* Slower animations */
+  }
+}
+
+/* Removed all cinematic animations for performance */
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .particle,
+  .aaa-loading,
+  .aaa-glow-pulse,
+  .aaa-sound-wave::before,
+  .aaa-sound-wave::after,
+  .aaa-camera-shake,
+  .aaa-zoom-in,
+  .aaa-fade-in-up,
+  .aaa-battle-transition::before,
+  .aaa-film-grain::after,
+  .aaa-epic-glow::before {
+    animation: none;
+  }
+  
+  .particles {
+    display: none;
+  }
+}
+
+/* Disable heavy effects on slower devices */
+@media (max-width: 1200px) {
+  .aaa-film-grain::after {
+    display: none; /* Disable film grain on smaller screens */
+  }
+  
+  .aaa-epic-glow::before {
+    animation-duration: 10s; /* Slower animations */
+  }
+}
+
+/* Ultra performance mode for very slow devices */
+@media (max-width: 768px) and (max-height: 1024px) {
+  .aaa-background {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  }
+  
+  .aaa-card {
+    backdrop-filter: blur(5px);
+  }
+  
+  .particles,
+  .aaa-film-grain::after,
+  .aaa-epic-glow::before {
+    display: none;
+  }
+}

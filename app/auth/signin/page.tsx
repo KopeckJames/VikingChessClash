@@ -39,27 +39,31 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="max-w-md w-full mx-4">
-        <div className="glass-card rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">V</span>
+    <div className="min-h-screen aaa-background relative overflow-hidden flex items-center justify-center">
+      <div className="max-w-md w-full mx-4 relative z-10">
+        <div className="aaa-card rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+          {/* Animated background pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-amber-700/10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full blur-xl"></div>
+
+          <div className="text-center mb-8 relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <span className="text-white font-bold text-3xl norse-symbol">ᚠ</span>
             </div>
-            <h1 className="text-3xl font-bold gradient-text mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your Viking Chess account</p>
+            <h1 className="aaa-title text-4xl font-bold mb-4">🏰 WELCOME BACK, WARRIOR</h1>
+            <p className="text-amber-200">Enter the halls of Hnefatafl once more</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
-                {error}
+              <div className="aaa-card bg-red-900/20 border border-red-400/50 rounded-xl p-4 text-red-200 text-sm">
+                ⚠️ {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+              <label htmlFor="username" className="block text-sm font-bold text-amber-200 mb-3">
+                ⚔️ WARRIOR NAME
               </label>
               <input
                 id="username"
@@ -67,14 +71,14 @@ export default function SignInPage() {
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter your username"
+                className="aaa-input w-full py-4 text-lg"
+                placeholder="Enter your warrior name"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+              <label htmlFor="password" className="block text-sm font-bold text-amber-200 mb-3">
+                🗝️ SECRET RUNE
               </label>
               <input
                 id="password"
@@ -82,39 +86,49 @@ export default function SignInPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter your password"
+                className="aaa-input w-full py-4 text-lg"
+                placeholder="Enter your secret rune"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full modern-button-primary py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="aaa-button w-full py-4 text-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Signing In...</span>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="aaa-loading"></div>
+                  <span>ENTERING HALLS...</span>
                 </div>
               ) : (
-                'Sign In'
+                <span className="flex items-center justify-center space-x-3">
+                  <span className="text-2xl">🏰</span>
+                  <span>ENTER THE HALLS</span>
+                  <span className="text-2xl">🏰</span>
+                </span>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link href="/auth/register" className="text-blue-600 hover:text-blue-800 font-medium">
-                Register here
+          <div className="mt-8 text-center relative z-10">
+            <p className="text-amber-200">
+              New to the realm?{' '}
+              <Link
+                href="/auth/register"
+                className="aaa-button-secondary text-sm px-4 py-2 inline-block"
+              >
+                JOIN THE WARRIORS
               </Link>
             </p>
           </div>
 
-          <div className="mt-6 text-center">
-            <Link href="/" className="text-gray-500 hover:text-gray-700 text-sm">
-              ← Back to Home
+          <div className="mt-6 text-center relative z-10">
+            <Link href="/" className="aaa-button-secondary text-sm px-6 py-3 inline-block">
+              <span className="flex items-center space-x-2">
+                <span>🏠</span>
+                <span>RETURN TO MAIN HALL</span>
+              </span>
             </Link>
           </div>
         </div>
